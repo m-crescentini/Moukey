@@ -376,14 +376,14 @@ Item {
 
                             Button {
                                 text: s["ring.sectors_4"] || "4 Sectors"
-                                highlighted: backend.actionsRingSlots.length === 4
+                                highlighted: backend.actionsRingSlotCount === 4
                                 Material.accent: actionsRingConfig.theme.accent
                                 onClicked: backend.setActionsRingSlotCount(4)
                             }
 
                             Button {
                                 text: s["ring.sectors_8"] || "8 Sectors"
-                                highlighted: backend.actionsRingSlots.length === 8
+                                highlighted: backend.actionsRingSlotCount === 8
                                 Material.accent: actionsRingConfig.theme.accent
                                 onClicked: backend.setActionsRingSlotCount(8)
                             }
@@ -446,7 +446,7 @@ Item {
                     }
 
                     Repeater {
-                        model: backend.actionsRingSlots.length || 4
+                        model: backend.actionsRingSlotCount
 
                         delegate: RowLayout {
                             width: slotsContent.width
@@ -454,7 +454,7 @@ Item {
 
                             Text {
                                 text: {
-                                    var dir = actionsRingConfig.getSectorDirectionName(index, backend.actionsRingSlots.length || 4)
+                                    var dir = actionsRingConfig.getSectorDirectionName(index, backend.actionsRingSlotCount)
                                     var prefix = (s["ring.slot_prefix"] || "Slot ") + (index + 1)
                                     return dir ? prefix + " (" + dir + ")" : prefix
                                 }

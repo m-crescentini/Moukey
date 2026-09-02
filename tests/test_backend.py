@@ -1893,6 +1893,14 @@ class BackendListPropertyMemoizationTests(unittest.TestCase):
         backend.mappingsChanged.emit()
         self.assertIs(backend.profiles, first)
 
+    def test_known_apps_cache_not_invalidated_by_unrelated_signals(self):
+        backend = self._build()
+        first = backend.knownApps
+        backend.profilesChanged.emit()
+        backend.mappingsChanged.emit()
+        backend.deviceLayoutChanged.emit()
+        self.assertIs(backend.knownApps, first)
+
     def test_actions_ring_slot_count_and_resize(self):
         backend = self._build()
         # Default slots count
