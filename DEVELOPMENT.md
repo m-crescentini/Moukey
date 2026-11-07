@@ -165,6 +165,13 @@ The same module owns the SmartShift integration. It prefers the enhanced feature
 
 Mouser handles mouse power-off / on cycles automatically:
 
+A `0x1D4B` wireless-status wake queues a configuration replay on the HID
+listener loop. After the current request completes and held controls are
+released, the listener re-applies the negotiated gesture CID/rawXY mode and
+extra diverts. A failed acknowledgement requests a full reconnect; a successful
+re-arm invokes Engine's wake callback to replay saved DPI, SmartShift,
+haptic/force and wheel settings. This path adds no periodic polling.
+
 - **HID++ layer** — `HidGestureListener` detects device disconnection (read errors) and enters a reconnect loop, retrying every 2–5 seconds until the device returns. Pending SmartShift / scroll-mode settings are replayed on reconnect.
 - **Hook layer** — `DeviceHook` listens for `WM_DEVICECHANGE` (Windows) and platform equivalents elsewhere, reinstalling the low-level hook when devices are added or removed.
 - **Sleep / resume (Windows)** — `WM_POWERBROADCAST`, console display-state and session-unlock notifications all funnel into one `_on_system_resume` worker, which owns the complete 0.5 s / 3 s / 10 s recovery ladder. Later cues join the active worker even when display-on and unlock are more than five seconds apart. HID reconnect generations make a fresh connection satisfy requests received during discovery, while a later request still invalidates the handle. `WM_DEVICECHANGE` wakes a disconnected listener out of its bounded reconnect backoff when a new Bolt HID path appears, without invalidating a healthy connection.
