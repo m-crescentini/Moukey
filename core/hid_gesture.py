@@ -256,6 +256,15 @@ def _log_once(key, message):
     print(message)
 
 
+def _user_idle_seconds():
+    """Seconds since the last user input, or None when unknown."""
+    try:
+        from core.engine import _system_idle_seconds
+    except Exception:
+        return None
+    return _system_idle_seconds()
+
+
 def _device_path_display(path):
     if isinstance(path, memoryview):
         path = bytes(path)
@@ -1251,6 +1260,9 @@ class HidGestureListener:
         # handle is still alive. See `_run_liveness_ping` (issue #263).
         self._last_report_at = 0.0
         self._pending_liveness_ping = False
+        # Divert health check (see _maybe_verify_divert).
+        self._divert_check_due = False
+        self._last_divert_check = 0.0
         # 0x2121 Hi-Res Wheel + 0x2150 Thumbwheel native-invert state.
         # Lock ordering: outer `_wheel_divert_call_lock` serializes
         # cross-thread callers, inner `_wheel_divert_lock` protects the
@@ -3031,6 +3043,9 @@ class HidGestureListener:
         # that exchange has completed instead of nesting a second request.
         self._wake_reconfigure_pending = True
         self._wake_session_key = self._session_key
+        # Backstop: confirm afterwards that the gesture divert really is
+        # back (see _maybe_verify_divert); reconnects if the replay missed.
+        self._divert_check_due = True
 
     def _consume_wake_reconfiguration(self):
         """Re-arm negotiated controls before replaying settings; listener only.
@@ -3491,6 +3506,9 @@ class HidGestureListener:
         change (e.g. USB just plugged in), so the charging indicator updates
         immediately instead of on the next 300s poll.
         """
+        # Devices broadcast battery status when they (re)link to a receiver,
+        # which is also when they drop our temporary diverts.
+        self._divert_check_due = True
         result = self._parse_battery_params(params)
         if result is None:
             return
@@ -3651,6 +3669,8 @@ class HidGestureListener:
             self._handle_wireless_status_event(params)
             return
 
+        # 0x1D4B statusBroadcastEvent: the device re-linked and dropped our
+        # volatile diverts. `_sw != MY_SW` keeps our own responses out.
         # Unsolicited battery status broadcast (feature 0x1004 / 0x1000,
         # event func 0) — pushed to the UI so charging shows instantly.
         # `_sw != MY_SW` excludes our own polled getStatus responses (which
@@ -4401,6 +4421,55 @@ class HidGestureListener:
             remaining = seconds - index * 0.1
             time.sleep(min(0.1, remaining))
 
+    # Receiver-attached devices (Bolt / Unifying) silently drop temporary
+    # diverts when they power-cycle, deep-sleep or re-link, while the
+    # receiver handle stays open and healthy. Nothing surfaces on the long
+    # HID++ collection we listen on, so periodically confirm the gesture
+    # CID is still diverted and reconnect when it is not.
+    _DIVERT_CHECK_INTERVAL_S = 30.0
+    # Only run the periodic check when the user produced input this
+    # recently, so we never poke a sleeping mouse (timeouts would flip the
+    # listener into its "asleep" state for nothing).
+    _DIVERT_CHECK_ACTIVE_WINDOW_S = 30.0
+
+    def _gesture_divert_intact(self):
+        """True/False when getCidReporting confirms/denies the gesture
+        divert, None when the device gave no usable answer."""
+        cid = self._gesture_cid
+        resp = self._get_cid_reporting(cid)
+        if not resp:
+            return None
+        params = resp[4]
+        if len(params) < 3 or ((params[0] << 8) | params[1]) != cid:
+            return None
+        return bool(params[2] & 0x01)
+
+    def _maybe_verify_divert(self, now=None):
+        """Raise IOError (triggering a full reconnect) when the device has
+        lost the gesture divert."""
+        if now is None:
+            now = time.monotonic()
+        if not self._divert_check_due:
+            if now - self._last_divert_check < self._DIVERT_CHECK_INTERVAL_S:
+                return
+            idle = _user_idle_seconds()
+            if idle is not None and idle >= self._DIVERT_CHECK_ACTIVE_WINDOW_S:
+                return
+        primary = self._sessions.get(self._primary_session)
+        if primary is not None:
+            self._load_cursor(primary)
+        if self._feat_idx is None:
+            return  # no gesture divert to verify (e.g. keyboard only)
+        if (self._held or getattr(self, "_native_hold", False)
+                or any(i["held"] for i in self._extra_diverts.values())):
+            return
+        self._divert_check_due = False
+        self._last_divert_check = now
+        if self._gesture_divert_intact() is False:
+            print(f"[HidGesture] Divert of {_format_cid(self._gesture_cid)} "
+                  "lost (device re-linked or reset) — reconnecting")
+            raise IOError("gesture divert lost")
+
     def _main_loop(self):
         """Outer loop: connect → listen → reconnect on error/disconnect."""
         retry_logged = False
@@ -4450,6 +4519,8 @@ class HidGestureListener:
             self._consecutive_request_timeouts = 0
             _device_asleep = False
             _device_sleep_time = None
+            self._divert_check_due = False
+            self._last_divert_check = time.monotonic()
             try:
                 while self._running:
                     if self._consume_reconnect_request():
@@ -4492,6 +4563,7 @@ class HidGestureListener:
                                 except Exception:
                                     pass
                             print("[HidGesture] Device woke from sleep")
+                            self._divert_check_due = True
                             self._on_report(raw)
                         continue
 
@@ -4525,6 +4597,7 @@ class HidGestureListener:
                         self._run_liveness_ping()
                     if self._consume_wake_reconfiguration():
                         continue
+                    self._maybe_verify_divert()
                     self._poll_receiver_notifications()
                     # Poll every distinct session handle. A USB receiver has a
                     # single handle; multiple direct Bluetooth devices each have
@@ -4600,6 +4673,7 @@ class HidGestureListener:
             self._smart_shift_idx = None
             self._battery_idx = None
             self._battery_feature_id = None
+            self._wireless_status_idx = None
             self._wheel_feature_indexes = {}
             self._crown_idx = None
             self._crown_accum = 0
