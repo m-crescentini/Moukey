@@ -586,6 +586,139 @@ class HidRequestReplyMatchingTests(unittest.TestCase):
         self.assertGreaterEqual(time.monotonic() - start, 0.2)
 
 
+class HidLivenessPingTests(unittest.TestCase):
+    """A resumed Windows box can leave our HID handle open against a device
+    stack it has already replaced: reads never fail, they just never return
+    anything again, so the listener sits "connected" against a dead pipe until
+    the user restarts Mouser (issue #263). The ping is what turns that silence
+    into a verdict."""
+
+    def _connected_listener(self):
+        listener = hid_gesture.HidGestureListener()
+        listener._connected = True
+        listener._dev = object()
+        return listener
+
+    def test_silence_is_unknown_until_a_connection_exists(self):
+        listener = hid_gesture.HidGestureListener()
+
+        self.assertIsNone(listener.seconds_since_last_report())
+
+    def test_silence_is_measured_from_the_last_report(self):
+        listener = self._connected_listener()
+        listener._last_report_at = time.monotonic() - 42.0
+
+        silence = listener.seconds_since_last_report()
+
+        self.assertIsNotNone(silence)
+        self.assertAlmostEqual(silence, 42.0, delta=1.0)
+
+    def test_any_report_counts_as_proof_of_life(self):
+        """Even a report we go on to ignore proves the pipe still carries
+        traffic, so the stamp lands before parsing."""
+        listener = self._connected_listener()
+        listener._last_report_at = 0.0
+
+        listener._on_report([0x11, 0x05, 0x00, 0x00])
+
+        self.assertGreater(listener._last_report_at, 0.0)
+
+    def test_request_liveness_ping_only_arms_a_flag(self):
+        """Callers are other threads; the probe itself must run on the
+        listener thread alongside every other HID++ exchange."""
+        listener = self._connected_listener()
+
+        listener.request_liveness_ping()
+
+        self.assertTrue(listener._pending_liveness_ping)
+
+    def test_answered_ping_clears_the_silence(self):
+        listener = self._connected_listener()
+        listener._last_report_at = 0.0
+        listener._consecutive_request_timeouts = 2
+
+        with patch.object(listener, "_request", return_value=("msg",)) as request:
+            listener._run_liveness_ping()
+
+        request.assert_called_once()
+        self.assertGreater(listener._last_report_at, 0.0)
+        self.assertEqual(listener._consecutive_request_timeouts, 0)
+
+    def test_unanswered_ping_raises_to_force_a_reconnect(self):
+        """IOError is the main loop's existing signal to tear the handle down
+        and rebuild it, diverts and all."""
+        listener = self._connected_listener()
+
+        with patch.object(listener, "_request", return_value=None) as request:
+            with self.assertRaises(IOError):
+                listener._run_liveness_ping()
+
+        # Retried once before giving up, so a single dropped reply does not
+        # cost a reconnect.
+        self.assertEqual(request.call_count, 2)
+
+    def test_single_dropped_reply_is_survivable(self):
+        listener = self._connected_listener()
+
+        with patch.object(listener, "_request", side_effect=[None, ("msg",)]):
+            listener._run_liveness_ping()
+
+    def test_ping_targets_the_primary_session_not_the_cursor(self):
+        """A sleeping keyboard under the cursor must not fail the probe."""
+        listener = self._connected_listener()
+        mouse = object()
+        keyboard = object()
+        listener._sessions = {
+            0: {"_dev": mouse, "_dev_idx": 1},
+            1: {"_dev": keyboard, "_dev_idx": 2},
+        }
+        listener._primary_session = 0
+        seen = []
+
+        with (
+            patch.object(listener, "_load_cursor", side_effect=seen.append),
+            patch.object(listener, "_request", return_value=("msg",)),
+        ):
+            listener._run_liveness_ping()
+
+        self.assertEqual(seen, [listener._sessions[0]])
+
+    def test_traffic_on_another_handle_does_not_prove_the_primary_alive(self):
+        listener = self._connected_listener()
+        mouse = object()
+        keyboard = object()
+        listener._sessions = {
+            0: {"_dev": mouse, "_dev_idx": 1},
+            1: {"_dev": keyboard, "_dev_idx": 2},
+        }
+        listener._primary_session = 0
+        listener._last_report_at = 0.0
+
+        listener._dev = keyboard
+        listener._on_report([0x11, 0x05, 0x00, 0x00])
+        self.assertEqual(listener._last_report_at, 0.0)
+
+        listener._dev = mouse
+        listener._on_report([0x11, 0x05, 0x00, 0x00])
+        self.assertGreater(listener._last_report_at, 0.0)
+
+    def test_connect_resets_liveness_state(self):
+        listener = hid_gesture.HidGestureListener()
+        listener._pending_liveness_ping = True
+        listener._last_report_at = 0.0
+
+        # Mirrors the main loop's post-connect bookkeeping: a fresh handle
+        # starts its silence window now, with no probe left over from the
+        # connection that just died.
+        listener._connected = True
+        listener._dev = object()
+        listener._last_report_at = time.monotonic()
+        listener._pending_liveness_ping = False
+
+        self.assertLess(listener.seconds_since_last_report(), 1.0)
+        self.assertFalse(listener._pending_liveness_ping)
+
+
 class HidBoltReceiverTests(unittest.TestCase):
     """Tests for Logi Bolt receiver support."""
 
