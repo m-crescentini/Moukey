@@ -84,7 +84,7 @@ class WindowsSuperKeyGuard(SuperKeyGuard):
     """Swallow `LWIN`/`RWIN` while a shortcut is being recorded.
 
     The hook lives on its own thread with a message loop, mirroring
-    `core/mouse_hook_windows.py`.  Only the Windows key is swallowed: every
+    `core/device_hook_windows.py`.  Only the Windows key is swallowed: every
     other key still reaches Qt normally, so a leaked hook can never leave the
     keyboard unusable.
     """
@@ -191,7 +191,7 @@ class WindowsSuperKeyGuard(SuperKeyGuard):
                 ("flags", wintypes.DWORD),
                 ("time", wintypes.DWORD),
                 # ULONG_PTR value, not an address -- see the note on
-                # MSLLHOOKSTRUCT in core/mouse_hook_windows.py.
+                # MSLLHOOKSTRUCT in core/device_hook_windows.py.
                 ("dwExtraInfo", wintypes.WPARAM),
             ]
 
@@ -277,7 +277,7 @@ def _user32():
     import ctypes
 
     # Private WinDLL instance, NOT the process-global ctypes.windll.user32.
-    # argtypes live on the DLL wrapper; the mouse hook (mouse_hook_windows.py)
+    # argtypes live on the DLL wrapper; the mouse hook (device_hook_windows.py)
     # sets CallNextHookEx/SetWindowsHookExW prototypes for MSLLHOOKSTRUCT on the
     # shared global handle. Reusing it here would overwrite lParam's type with
     # KBDLLHOOKSTRUCT and make every mouse event raise, freezing the pointer.

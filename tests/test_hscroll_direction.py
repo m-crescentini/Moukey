@@ -9,33 +9,33 @@ one helper; these tests pin its meaning and that every hook uses it.
 from pathlib import Path
 import unittest
 
-from core.mouse_hook_types import MouseEvent, hscroll_event_type
+from core.device_hook_types import DeviceEvent, hscroll_event_type
 
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOK_SOURCES = {
-    "windows": ROOT / "core" / "mouse_hook_windows.py",
-    "macos": ROOT / "core" / "mouse_hook_macos.py",
-    "linux": ROOT / "core" / "mouse_hook_linux.py",
+    "windows": ROOT / "core" / "device_hook_windows.py",
+    "macos": ROOT / "core" / "device_hook_macos.py",
+    "linux": ROOT / "core" / "device_hook_linux.py",
 }
 
 
 class HscrollEventTypeTests(unittest.TestCase):
     def test_positive_delta_is_a_rightward_scroll(self):
-        self.assertEqual(hscroll_event_type(1), MouseEvent.HSCROLL_RIGHT)
-        self.assertEqual(hscroll_event_type(120), MouseEvent.HSCROLL_RIGHT)
+        self.assertEqual(hscroll_event_type(1), DeviceEvent.HSCROLL_RIGHT)
+        self.assertEqual(hscroll_event_type(120), DeviceEvent.HSCROLL_RIGHT)
 
     def test_negative_delta_is_a_leftward_scroll(self):
-        self.assertEqual(hscroll_event_type(-1), MouseEvent.HSCROLL_LEFT)
-        self.assertEqual(hscroll_event_type(-120), MouseEvent.HSCROLL_LEFT)
+        self.assertEqual(hscroll_event_type(-1), DeviceEvent.HSCROLL_LEFT)
+        self.assertEqual(hscroll_event_type(-120), DeviceEvent.HSCROLL_LEFT)
 
     def test_zero_delta_has_no_direction(self):
         self.assertEqual(hscroll_event_type(0), "")
 
     def test_float_deltas_are_classified_too(self):
         # macOS fixed-point deltas arrive as floats.
-        self.assertEqual(hscroll_event_type(0.5), MouseEvent.HSCROLL_RIGHT)
-        self.assertEqual(hscroll_event_type(-0.5), MouseEvent.HSCROLL_LEFT)
+        self.assertEqual(hscroll_event_type(0.5), DeviceEvent.HSCROLL_RIGHT)
+        self.assertEqual(hscroll_event_type(-0.5), DeviceEvent.HSCROLL_LEFT)
 
 
 class HookSourcesUseTheSharedMappingTests(unittest.TestCase):
@@ -50,8 +50,8 @@ class HookSourcesUseTheSharedMappingTests(unittest.TestCase):
         for name, path in HOOK_SOURCES.items():
             source = path.read_text(encoding="utf-8")
             with self.subTest(platform=name):
-                self.assertNotIn("MouseEvent(MouseEvent.HSCROLL_LEFT", source)
-                self.assertNotIn("MouseEvent(MouseEvent.HSCROLL_RIGHT", source)
+                self.assertNotIn("DeviceEvent(DeviceEvent.HSCROLL_LEFT", source)
+                self.assertNotIn("DeviceEvent(DeviceEvent.HSCROLL_RIGHT", source)
 
 
 if __name__ == "__main__":

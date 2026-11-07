@@ -1,6 +1,6 @@
 """Tests for per-button slide gestures (back/forward/middle, all platforms).
 
-Covers the config owner/binding logic, the shared BaseMouseHook arm/sample/
+Covers the config owner/binding logic, the shared BaseDeviceHook arm/sample/
 release flow (platform-agnostic), config migration seeding, and the engine
 wiring that arms owners at the hook and routes swipe events to actions.
 """
@@ -21,7 +21,7 @@ from core.config import (
     button_gesture_tap_action,
     _migrate,
 )
-from core.mouse_hook_base import BaseMouseHook
+from core.device_hook_base import BaseDeviceHook
 
 
 def _cfg_with(middle=None, mappings=None):
@@ -117,7 +117,7 @@ class ButtonGestureConfigTests(unittest.TestCase):
 
 class BaseHookButtonGestureTests(unittest.TestCase):
     def _hook(self, owners=("middle", "xbutton1"), threshold=30):
-        hook = BaseMouseHook()
+        hook = BaseDeviceHook()
         self.emitted = []
         hook._dispatch = lambda ev: self.emitted.append(ev)
         hook.configure_button_gestures(
@@ -281,7 +281,7 @@ class EngineButtonGestureWiringTests(unittest.TestCase):
         cfg = copy.deepcopy(DEFAULT_CONFIG)
         cfg["profiles"]["default"]["mappings"].update(mappings)
         with (
-            patch("core.engine.MouseHook", _RecordingHook),
+            patch("core.engine.DeviceHook", _RecordingHook),
             patch("core.engine.AppDetector", _FakeAppDetector),
             patch("core.engine.load_config", return_value=cfg),
         ):

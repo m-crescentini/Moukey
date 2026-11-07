@@ -204,7 +204,7 @@ class HidEnumerationFallbackTests(unittest.TestCase):
         }
         fake_dev = _FakeHidDevice()
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x10
             return None
@@ -366,7 +366,7 @@ class HidDiscoveryDiagnosticsTests(unittest.TestCase):
         listener, info = self._make_listener()
         fake_dev = _FakeHidDevice()
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x10
             return None
@@ -419,7 +419,7 @@ class HidDiscoveryDiagnosticsTests(unittest.TestCase):
         }
         fake_devs = [_FakeHidDevice(), _FakeHidDevice()]
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x10
             return None
@@ -604,8 +604,11 @@ class HidBoltReceiverTests(unittest.TestCase):
         fake_dev = _FakeHidDevice()
         divert_call_count = [0]
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
-            if feature_id == hid_gesture.FEAT_REPROG_V4:
+        def fake_find_feature(feature_id, timeout_ms=2000):
+            # Receiver: a keyboard on slot 1 (divert fails) and a mouse on slot 2
+            # (divert succeeds); the multiplexer scan only binds where divert works.
+            if (feature_id == hid_gesture.FEAT_REPROG_V4
+                    and listener._dev_idx in (1, 2)):
                 return 0x09
             return None
 
@@ -675,6 +678,19 @@ class HidBoltReceiverTests(unittest.TestCase):
 
         self.assertEqual(len(timeouts), 6)
         self.assertTrue(all(t >= 1500 for t in timeouts), timeouts)
+
+    def test_battery_broadcast_reports_owning_device_type(self):
+        listener = hid_gesture.HidGestureListener()
+        events = []
+        listener._on_battery = lambda *args: events.append(args)
+        listener._battery_idx = 0x08
+        listener._device_type = "keyboard"
+
+        listener._process_report(0x08, 0, [80, 0, 1], hid_gesture.MY_SW)
+        self.assertEqual(events, [])  # our own polled getStatus response
+
+        listener._process_report(0x08, 0, [80, 0, 1], 0)
+        self.assertEqual(events, [(80, True, "keyboard")])
 
     def test_direct_device_probes_keep_the_short_timeout(self):
         """Nothing rejects a wrong index on a direct device -- an MX Brio
@@ -788,7 +804,7 @@ class HidBoltReceiverTests(unittest.TestCase):
         }
         fake_dev = _FakeHidDevice()
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x09
             return None
@@ -833,7 +849,7 @@ class HidBoltReceiverTests(unittest.TestCase):
         ]
         fake_dev = _FakeHidDevice()
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x09
             return None
@@ -1258,7 +1274,7 @@ class HidBoltReceiverTests(unittest.TestCase):
         ]
         fake_dev = _FakeHidDevice()
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id == hid_gesture.FEAT_REPROG_V4:
                 return 0x09
             return None
@@ -1305,7 +1321,7 @@ class HidBoltReceiverTests(unittest.TestCase):
         fake_dev = _FakeHidDevice()
         call_count = [0]
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id != hid_gesture.FEAT_REPROG_V4:
                 return None
             call_count[0] += 1
@@ -1351,7 +1367,7 @@ class HidBoltReceiverTests(unittest.TestCase):
         fake_dev = _FakeHidDevice()
         call_count = [0]
 
-        def fake_find_feature(feature_id, *, timeout_ms=None):
+        def fake_find_feature(feature_id, timeout_ms=2000):
             if feature_id != hid_gesture.FEAT_REPROG_V4:
                 return None
             call_count[0] += 1
@@ -1379,6 +1395,96 @@ class HidBoltReceiverTests(unittest.TestCase):
         self.assertEqual(listener.connected_device.transport, "USB Receiver")
 
 
+class HidMultipleBluetoothTests(unittest.TestCase):
+    """Two Bluetooth devices are separate HID interfaces (separate handles) that
+    both report on device-index 0xFF; the multiplexer must bind both, not just
+    the first interface it succeeds on."""
+
+    def test_binds_both_direct_bluetooth_devices(self):
+        listener = hid_gesture.HidGestureListener()
+        infos = [
+            {"product_id": 0xB023, "usage_page": 0xFF00, "usage": 0x0001,
+             "source": "hidapi-enumerate", "product_string": "MX Master 3",
+             "serial_number": "aa:bb:cc:dd:ee:01", "path": b"/dev/hidraw-a"},
+            {"product_id": 0xB035, "usage_page": 0xFF00, "usage": 0x0001,
+             "source": "hidapi-enumerate", "product_string": "MX Keys",
+             "serial_number": "aa:bb:cc:dd:ee:02", "path": b"/dev/hidraw-b"},
+        ]
+
+        def fake_find_feature(feature_id, timeout_ms=2000):
+            # Both devices answer REPROG_V4 on the direct index 0xFF only.
+            if (feature_id == hid_gesture.FEAT_REPROG_V4
+                    and listener._dev_idx == hid_gesture.BT_DEV_IDX):
+                return 0x09
+            return None
+
+        with (
+            patch.object(listener, "_vendor_hid_infos", return_value=infos),
+            patch.object(listener, "_find_feature", side_effect=fake_find_feature),
+            patch.object(listener, "_discover_reprog_controls", return_value=[]),
+            patch.object(listener, "_divert", return_value=True),
+            patch.object(listener, "_divert_extras"),
+            patch.object(hid_gesture, "HIDAPI_OK", True),
+            patch.object(hid_gesture, "_BACKEND_PREFERENCE", "hidapi"),
+            patch.object(hid_gesture, "_HID_API_STYLE", "hidapi"),
+            patch.object(
+                hid_gesture,
+                "_hid",
+                # A fresh handle per open(): distinct Bluetooth interfaces.
+                SimpleNamespace(device=lambda: _FakeHidDevice()),
+                create=True,
+            ),
+            patch("builtins.print"),
+        ):
+            self.assertTrue(listener._try_connect())
+
+        # Both devices bound as separate sessions on two distinct handles.
+        self.assertEqual(len(listener._sessions), 2)
+        self.assertEqual(len(listener._distinct_session_handles()), 2)
+        names = sorted(d.product_name for d in listener.connected_devices)
+        self.assertEqual(names, ["MX Keys", "MX Master 3"])
+
+    def test_skips_second_collection_of_same_bluetooth_device(self):
+        """A single BLE device exposes several 0xFF00 collections (same serial);
+        it must be bound once, not once per collection."""
+        listener = hid_gesture.HidGestureListener()
+        infos = [
+            {"product_id": 0xB023, "usage_page": 0xFF00, "usage": 0x0002,
+             "source": "hidapi-enumerate", "product_string": "MX Master 3",
+             "serial_number": "aa:bb:cc:dd:ee:01", "path": b"/dev/hidraw-a&col01"},
+            {"product_id": 0xB023, "usage_page": 0xFF00, "usage": 0x0001,
+             "source": "hidapi-enumerate", "product_string": "MX Master 3",
+             "serial_number": "aa:bb:cc:dd:ee:01", "path": b"/dev/hidraw-a&col02"},
+        ]
+
+        def fake_find_feature(feature_id, timeout_ms=2000):
+            if (feature_id == hid_gesture.FEAT_REPROG_V4
+                    and listener._dev_idx == hid_gesture.BT_DEV_IDX):
+                return 0x09
+            return None
+
+        with (
+            patch.object(listener, "_vendor_hid_infos", return_value=infos),
+            patch.object(listener, "_find_feature", side_effect=fake_find_feature),
+            patch.object(listener, "_discover_reprog_controls", return_value=[]),
+            patch.object(listener, "_divert", return_value=True),
+            patch.object(listener, "_divert_extras"),
+            patch.object(hid_gesture, "HIDAPI_OK", True),
+            patch.object(hid_gesture, "_BACKEND_PREFERENCE", "hidapi"),
+            patch.object(hid_gesture, "_HID_API_STYLE", "hidapi"),
+            patch.object(
+                hid_gesture,
+                "_hid",
+                SimpleNamespace(device=lambda: _FakeHidDevice()),
+                create=True,
+            ),
+            patch("builtins.print"),
+        ):
+            self.assertTrue(listener._try_connect())
+
+        self.assertEqual(len(listener._sessions), 1)
+
+
 class HidReconnectInvariantTests(unittest.TestCase):
     def test_force_release_stale_holds_clears_gesture_and_extra_buttons(self):
         gesture_up = Mock()
@@ -1397,6 +1503,37 @@ class HidReconnectInvariantTests(unittest.TestCase):
         gesture_up.assert_called_once_with()
         extra_up.assert_called_once_with()
 
+
+class MultiDeviceFeatureFlagTests(unittest.TestCase):
+    """backlight/crown support must consider every bound device, not just the
+    live cursor (which flips between devices as reports are processed)."""
+
+    def test_backlight_supported_true_when_any_session_has_it(self):
+        listener = hid_gesture.HidGestureListener()
+        listener._sessions = {
+            0x02: {"_backlight_idx": 0x0A, "_crown_idx": 0x12},  # keyboard
+            0x03: {"_backlight_idx": None, "_crown_idx": None},  # mouse
+        }
+        # Cursor currently points at the mouse (no backlight)…
+        listener._backlight_idx = None
+        listener._crown_idx = None
+        # …but support must still be reported from the keyboard session.
+        self.assertTrue(listener.backlight_supported)
+        self.assertTrue(listener.crown_present)
+
+    def test_backlight_supported_false_when_no_session_has_it(self):
+        listener = hid_gesture.HidGestureListener()
+        listener._sessions = {0x03: {"_backlight_idx": None, "_crown_idx": None}}
+        listener._backlight_idx = None
+        listener._crown_idx = None
+        self.assertFalse(listener.backlight_supported)
+        self.assertFalse(listener.crown_present)
+
+    def test_single_device_falls_back_to_cursor(self):
+        listener = hid_gesture.HidGestureListener()
+        listener._sessions = {}
+        listener._backlight_idx = 0x0A
+        self.assertTrue(listener.backlight_supported)
 
 class MxMaster4ConstantTests(unittest.TestCase):
     def test_sense_panel_cid_named(self):

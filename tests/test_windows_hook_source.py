@@ -12,7 +12,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WINDOWS_HOOK = (ROOT / "core" / "mouse_hook_windows.py").read_text(encoding="utf-8")
+WINDOWS_HOOK = (ROOT / "core" / "device_hook_windows.py").read_text(encoding="utf-8")
 KEY_CAPTURE = (ROOT / "core" / "key_capture.py").read_text(encoding="utf-8")
 
 
@@ -25,7 +25,7 @@ class ExtraInfoIsAValueNotAPointerTests(unittest.TestCase):
 
     def test_no_hook_dereferences_extra_info(self):
         for name, source in (
-            ("mouse_hook_windows", WINDOWS_HOOK),
+            ("device_hook_windows", WINDOWS_HOOK),
             ("key_capture", KEY_CAPTURE),
         ):
             with self.subTest(module=name):

@@ -3,7 +3,7 @@ import os
 import sys
 import types
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 from core import key_simulator
 
@@ -24,6 +24,21 @@ class KeySimulatorActionTests(unittest.TestCase):
         self.assertEqual(key_simulator.ACTIONS["prev_tab"]["category"], "Browser")
         self.assertTrue(len(key_simulator.ACTIONS["next_tab"]["keys"]) > 0)
         self.assertTrue(len(key_simulator.ACTIONS["prev_tab"]["keys"]) > 0)
+
+    @unittest.skipUnless(sys.platform == "win32", "windows-specific close_window behavior")
+    @patch("core.key_simulator.PostMessageW")
+    @patch("core.key_simulator.GetForegroundWindow")
+    def test_close_window_uses_postmessage(self, mock_get_foreground, mock_post_message):
+        mock_get_foreground.return_value = 0x1234
+
+        key_simulator.execute_action("close_window")
+
+        mock_post_message.assert_called_once_with(
+            0x1234,
+            key_simulator.WM_SYSCOMMAND,
+            key_simulator.SC_CLOSE,
+            0,
+        )
 
 
 class CustomShortcutParsingTests(unittest.TestCase):
@@ -166,8 +181,19 @@ class WindowsScreenshotActionTests(unittest.TestCase):
 
         fake_send_input.argtypes = []
         fake_send_input.restype = 1
+
+        def fake_get_foreground_window(*_args):
+            return 0
+
+        def fake_post_message(*_args):
+            return 1
+
         fake_windll = types.SimpleNamespace(
-            user32=types.SimpleNamespace(SendInput=fake_send_input)
+            user32=types.SimpleNamespace(
+                SendInput=fake_send_input,
+                GetForegroundWindow=fake_get_foreground_window,
+                PostMessageW=fake_post_message,
+            )
         )
         platform_patch = patch.object(sys, "platform", "win32")
         windll_patch = patch.object(ctypes, "windll", fake_windll, create=True)
@@ -436,9 +462,8 @@ class WindowsZoomActionTests(unittest.TestCase):
 
         fake_send_input.argtypes = []
         fake_send_input.restype = 1
-        fake_windll = types.SimpleNamespace(
-            user32=types.SimpleNamespace(SendInput=fake_send_input)
-        )
+        fake_windll = MagicMock(name="windll")
+        fake_windll.user32.SendInput = fake_send_input
         platform_patch = patch.object(sys, "platform", "win32")
         windll_patch = patch.object(ctypes, "windll", fake_windll, create=True)
         platform_patch.start()
@@ -529,6 +554,45 @@ class LinuxZoomActionTests(unittest.TestCase):
             module.execute_action("zoom_out")
 
         send_key_combo.assert_called_once_with([module.KEY_LEFTCTRL, module.KEY_MINUS])
+
+
+class OpenAppActionTests(unittest.TestCase):
+    def test_parse_open_app_returns_path(self):
+        self.assertEqual(
+            key_simulator.parse_open_app("open_app:C:\\Apps\\Code.exe"),
+            "C:\\Apps\\Code.exe")
+
+    def test_parse_open_app_ignores_other_actions(self):
+        self.assertIsNone(key_simulator.parse_open_app("custom:ctrl+c"))
+        self.assertIsNone(key_simulator.parse_open_app("alt_tab"))
+
+    def test_open_app_label_uses_executable_stem(self):
+        self.assertEqual(
+            key_simulator.open_app_label("open_app:/usr/bin/firefox"),
+            "Open firefox")
+        self.assertEqual(
+            key_simulator.open_app_label("open_app:C:\\Apps\\Code.exe"),
+            "Open Code")
+
+    def test_open_app_label_passthrough_for_non_open_app(self):
+        self.assertEqual(key_simulator.open_app_label("alt_tab"), "alt_tab")
+
+    def test_launch_application_dispatches_per_platform(self):
+        if sys.platform == "win32":
+            with patch("os.startfile", create=True) as startfile:
+                key_simulator.launch_application("C:\\Apps\\Code.exe")
+            startfile.assert_called_once_with("C:\\Apps\\Code.exe")
+        else:
+            with patch("subprocess.Popen") as popen:
+                key_simulator.launch_application("/usr/bin/firefox")
+            popen.assert_called_once()
+
+    def test_launch_application_ignores_empty_path(self):
+        with patch("subprocess.Popen") as popen, \
+                patch("os.startfile", create=True) as startfile:
+            key_simulator.launch_application("")
+        popen.assert_not_called()
+        startfile.assert_not_called()
 
 
 if __name__ == "__main__":
