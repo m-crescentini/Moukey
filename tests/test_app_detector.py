@@ -86,6 +86,7 @@ class AppDetectorMacOSTests(unittest.TestCase):
         with open(os.path.join(info_dir, "Info.plist"), "wb") as f:
             plistlib.dump({"CFBundleIdentifier": bundle_id}, f)
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_nested_app_identities_include_inner_then_outer_app(self):
         class FakeURL:
             def __init__(self, path):

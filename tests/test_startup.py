@@ -151,6 +151,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
 
         self.assertEqual(args, ["/Applications/Mouser.app/Contents/MacOS/Mouser"])
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_macos_plist_path_uses_canonical_launch_agent_name(self):
         with patch("os.path.expanduser", side_effect=lambda p: p.replace("~", "/Users/test")):
             plist_path = st._macos_plist_path()
@@ -400,6 +401,7 @@ class ApplyLoginStartupLinuxTests(unittest.TestCase):
         with patch.object(sys, "platform", "linux"):
             self.assertTrue(st.supports_login_startup())
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_linux_source_checkout_prefers_project_venv_python(self):
         with (
             patch.object(sys, "platform", "linux"),

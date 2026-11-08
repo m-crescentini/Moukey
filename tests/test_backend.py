@@ -136,6 +136,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             all(item["settings"]["language"] == "zh_CN" for item in saved)
         )
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_device_image_source_uses_encoded_file_url(self):
         backend = self._make_backend(root_dir="/tmp/Mouser Build")
 

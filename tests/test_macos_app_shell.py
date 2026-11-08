@@ -13,6 +13,7 @@ except Exception:  # pragma: no cover - env without PySide6 / project deps
 
 @unittest.skipIf(main_qml is None, "main_qml / PySide6 not available")
 class MacOSLauncherPathTests(unittest.TestCase):
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_named_executable_uses_venv_shim_directory(self):
         executable = "/tmp/Mouser/.venv/bin/python"
 
@@ -28,6 +29,7 @@ class MacOSLauncherPathTests(unittest.TestCase):
                 "/tmp/Mouser/.venv/bin/Mouser",
             )
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_named_executable_uses_project_fallback_outside_venv(self):
         with (
             patch.object(main_qml.sys, "executable", "/usr/bin/python3"),
@@ -47,6 +49,7 @@ class MacOSLauncherPathTests(unittest.TestCase):
             main_qml._maybe_relaunch_with_mouser_process_name()
         execv.assert_not_called()
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_relaunch_stages_symlink_and_execs_named_path(self):
         executable = "/tmp/Mouser/.venv/bin/python"
         target = "/tmp/Mouser/.venv/bin/Mouser"
@@ -89,6 +92,7 @@ class AppIdentityTests(unittest.TestCase):
                 "/tmp/Mouser/linux/icons/hicolor/256x256/apps/io.github.tombadash.mouser.png",
             )
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_app_icon_uses_ico_on_windows(self):
         with (
             patch.object(main_qml.sys, "platform", "win32"),

@@ -1,5 +1,6 @@
 import subprocess
 import tempfile
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -297,6 +298,7 @@ class SpectacleScreenshotBackendTests(unittest.TestCase):
 
         self.assertIsNone(backend)
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_command_for_action_uses_fullscreen_or_region_mode(self):
         backend = SpectacleScreenshotBackend(executable="/usr/bin/spectacle")
 

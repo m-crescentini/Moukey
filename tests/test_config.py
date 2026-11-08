@@ -4,6 +4,7 @@ import ntpath
 import os
 import plistlib
 import tempfile
+import sys
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -12,6 +13,17 @@ from unittest.mock import patch
 from core import app_catalog
 from core import config
 
+
+def _symlinks_supported():
+    """True when this process may create symlinks (Windows needs Developer Mode or admin)."""
+    import os
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            os.symlink(os.path.join(d, "t"), os.path.join(d, "l"))
+        except (OSError, NotImplementedError):
+            return False
+    return True
 
 @contextmanager
 def _platform_catalog(platform):
@@ -653,6 +665,7 @@ class SaveConfigTests(unittest.TestCase):
                 json.loads(config_file.read_text(encoding="utf-8")), cfg
             )
 
+    @unittest.skipUnless(_symlinks_supported(), "creating symlinks needs privileges not available here")
     def test_save_config_preserves_symlinked_config_file(self):
         """When CONFIG_FILE is a symlink (e.g. via GNU stow), save_config must
         update the link target in place rather than replacing the link with a
@@ -686,6 +699,7 @@ class SaveConfigTests(unittest.TestCase):
                 json.loads(real_target.read_text(encoding="utf-8")), cfg
             )
 
+    @unittest.skipUnless(_symlinks_supported(), "creating symlinks needs privileges not available here")
     def test_save_config_follows_broken_symlink_target(self):
         """A dangling symlink should be repaired in place: the link survives and
         now points at a valid file with the saved contents."""
@@ -999,6 +1013,7 @@ class AppCatalogTests(unittest.TestCase):
                 r"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
             )
 
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_linux_desktop_discovery_resolves_exec_paths(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             apps_dir = Path(temp_dir) / "applications"
@@ -1036,6 +1051,7 @@ class AppCatalogTests(unittest.TestCase):
         self.assertIn("code.desktop", entries[0]["aliases"])
         self.assertIn("code-oss", entries[0]["aliases"])
 
+    @unittest.skipUnless(_symlinks_supported(), "creating symlinks needs privileges not available here")
     def test_resolve_app_spec_realpaths_linux_binary_paths(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             real_exec = Path(temp_dir) / "real-code"

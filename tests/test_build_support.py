@@ -1,6 +1,7 @@
 import os
 import re
 import stat
+import sys
 import unittest
 
 from build_support import normalized_qt_library_stem, should_keep_linux_qt_asset
@@ -52,6 +53,7 @@ class LinuxQtAssetFilterTests(unittest.TestCase):
 
 
 class LinuxPermissionPackagingTests(unittest.TestCase):
+    @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_linux_permission_helper_files_exist(self):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         helper = os.path.join(
