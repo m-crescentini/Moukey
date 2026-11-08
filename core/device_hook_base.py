@@ -260,6 +260,7 @@ class BaseDeviceHook:
         commit_window_ms=400,
         settle_ms=90,
         cross_ratio=0.5,
+        press_window_ms=0,
     ):
         self._gesture_direction_enabled = bool(enabled)
         self._gesture_recognizer.configure(
@@ -268,6 +269,7 @@ class BaseDeviceHook:
             commit_window_ms=commit_window_ms,
             settle_ms=settle_ms,
             cross_ratio=cross_ratio,
+            press_window_ms=press_window_ms,
         )
 
     def configure_thumb_gestures(
@@ -277,6 +279,7 @@ class BaseDeviceHook:
         commit_window_ms=400,
         settle_ms=90,
         cross_ratio=0.5,
+        press_window_ms=0,
     ):
         """Configure the MX Master 4 thumb Gesture button's swipe recognizer.
         Also tells the HID listener whether to hand rawXY to the thumb on
@@ -288,6 +291,7 @@ class BaseDeviceHook:
             commit_window_ms=commit_window_ms,
             settle_ms=settle_ms,
             cross_ratio=cross_ratio,
+            press_window_ms=press_window_ms,
         )
         hg = self._hid_gesture
         if hg is not None and hasattr(hg, "set_thumb_rawxy_enabled"):
@@ -308,6 +312,7 @@ class BaseDeviceHook:
         settle_ms=90,
         cross_ratio=0.5,
         timeout_ms=3000,
+        press_window_ms=0,
     ):
         """Set which buttons (owner names "middle"/"xbutton1"/"xbutton2") are
         armed as slide-gesture pads and configure their shared recognizer."""
@@ -320,6 +325,7 @@ class BaseDeviceHook:
             commit_window_ms=commit_window_ms,
             settle_ms=settle_ms,
             cross_ratio=cross_ratio,
+            press_window_ms=press_window_ms,
         )
         if not self._button_gesture_enabled:
             self._button_gesture_active_owner = None
@@ -344,7 +350,7 @@ class BaseDeviceHook:
         # must re-establish their origin on the first move of this hold, since a
         # button may arm without a known start point (e.g. mode shift over HID).
         self._button_gesture_origin_needed = True
-        self._button_gesture_recognizer.begin()
+        self._button_gesture_recognizer.begin(now=now)
         self._emit_debug(f"Button gesture armed owner={owner}")
         return True
 
@@ -664,8 +670,10 @@ class BaseDeviceHook:
     def _on_hid_gesture_down(self):
         if getattr(self, "_ui_passthrough", False):
             return
-        if self._gesture_active:
-            return
+        # begin() is idempotent (it resets every hold state), so always run it:
+        # if a previous button-up was lost (BLE drop, very fast release), the
+        # recognizer would otherwise keep its stale leg/accumulators and the
+        # next press would build on them — firing a swipe the user never made.
         self._gesture_recognizer.begin()
         self._gesture_active = True
         self._emit_debug("HID gesture button down")
@@ -769,8 +777,8 @@ class BaseDeviceHook:
         # handed rawXY to this CID so hold+move recognizes a direction.
         if getattr(self, "_ui_passthrough", False):
             return
-        if self._thumb_active:
-            return
+        # begin() is idempotent — always reset on press so a lost button-up
+        # cannot carry stale recognizer state into the next hold.
         self._thumb_recognizer.begin()
         self._thumb_active = True
         self._emit_debug("HID thumb button down")

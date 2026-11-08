@@ -212,6 +212,10 @@ class Engine:
         g_commit = settings.get("gesture_commit_window_ms", 400)
         g_settle = settings.get("gesture_settle_ms", 90)
         g_cross = settings.get("gesture_cross_ratio", 0.5)
+        # Press-settle window: ignore movement reports arriving within this
+        # many ms of the button press, so the jolt of pressing the button
+        # itself cannot cross the commit threshold and fire a swipe.
+        g_press = settings.get("gesture_press_window_ms", 80)
 
         def _swipe_enabled(tap_key):
             # A native control's (gesture / Sense Panel) swipe set is active when
@@ -225,6 +229,7 @@ class Engine:
             enabled=_swipe_enabled(primary_tap_key),
             threshold=g_threshold, commit_window_ms=g_commit,
             settle_ms=g_settle, cross_ratio=g_cross,
+            press_window_ms=g_press,
         )
         if hasattr(self.hook, "set_gesture_os_passthrough"):
             self.hook.set_gesture_os_passthrough(
@@ -238,6 +243,7 @@ class Engine:
                 enabled=_swipe_enabled(thumb_tap_key),
                 threshold=g_threshold, commit_window_ms=g_commit,
                 settle_ms=g_settle, cross_ratio=g_cross,
+                press_window_ms=g_press,
             )
             if hasattr(self.hook, "set_thumb_os_passthrough"):
                 self.hook.set_thumb_os_passthrough(
@@ -291,6 +297,7 @@ class Engine:
                 owners=active_button_gesture_owners,
                 threshold=g_threshold, commit_window_ms=g_commit,
                 settle_ms=g_settle, cross_ratio=g_cross,
+                press_window_ms=g_press,
             )
 
         has_mode_shift = _any_device_has("mode_shift")
