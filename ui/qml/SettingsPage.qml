@@ -611,7 +611,7 @@ Item {
                                 bold: true
                                 letterSpacing: 0.8
                             }
-                            color: scrollPage.theme.textDim
+                            color: settingsPage.theme.textDim
                         }
 
                         Text {
@@ -620,7 +620,7 @@ Item {
                                 family: uiState.fontFamily
                                 pixelSize: 12
                             }
-                            color: scrollPage.theme.textSecondary
+                            color: settingsPage.theme.textSecondary
                             wrapMode: Text.WordWrap
                             width: parent.width
                         }
@@ -632,7 +632,7 @@ Item {
                             Text {
                                 text: "1"
                                 font { family: uiState.fontFamily; pixelSize: 11 }
-                                color: scrollPage.theme.textDim
+                                color: settingsPage.theme.textDim
                             }
 
                             WheelSafeSlider {
@@ -642,9 +642,9 @@ Item {
                                 to: 100
                                 stepSize: 1
                                 value: backend.scrollForce
-                                accentColor: scrollPage.theme.accent
-                                accentDimColor: scrollPage.theme.accentDim
-                                trackColor: scrollPage.theme.border
+                                accentColor: settingsPage.theme.accent
+                                accentDimColor: settingsPage.theme.accentDim
+                                trackColor: settingsPage.theme.border
 
                                 onMoved: {
                                     scrollForceLabel.text = Math.round(value) + "%"
@@ -655,14 +655,14 @@ Item {
                             Text {
                                 text: "100"
                                 font { family: uiState.fontFamily; pixelSize: 11 }
-                                color: scrollPage.theme.textDim
+                                color: settingsPage.theme.textDim
                             }
 
                             Rectangle {
                                 Layout.preferredWidth: 72
                                 Layout.preferredHeight: 36
                                 radius: 10
-                                color: scrollPage.theme.accentDim
+                                color: settingsPage.theme.accentDim
 
                                 Text {
                                     id: scrollForceLabel
@@ -673,7 +673,7 @@ Item {
                                         pixelSize: 14
                                         bold: true
                                     }
-                                    color: scrollPage.theme.accent
+                                    color: settingsPage.theme.accent
                                 }
                             }
                         }
