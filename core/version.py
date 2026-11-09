@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 
-_DEFAULT_APP_VERSION = "3.7.3"
+_DEFAULT_APP_VERSION = "4.0.0"
 _BUILD_INFO_FILENAME = "moukey_build_info.json"
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
