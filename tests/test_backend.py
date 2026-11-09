@@ -249,7 +249,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
 
         fetch_manifest.assert_called_once_with(
             "v3.7.0",
-            repo="TomBadash/Mouser",
+            repo="m-crescentini/Moukey",
             highest_trusted_build=30699,
         )
         self.assertEqual(backend.updateInstallStatus, "manual_fallback")

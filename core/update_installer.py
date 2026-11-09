@@ -364,7 +364,7 @@ def fetch_json(url: str, *, timeout: float = 10.0):
         return json.loads(response.read().decode("utf-8-sig"))
 
 
-def manifest_url_for_release(tag: str, repo: str = "TomBadash/Mouser") -> str:
+def manifest_url_for_release(tag: str, repo: str = "m-crescentini/Moukey") -> str:
     override = os.environ.get(_UPDATE_MANIFEST_URL_ENV, "").strip()
     if override:
         return override
@@ -374,7 +374,7 @@ def manifest_url_for_release(tag: str, repo: str = "TomBadash/Mouser") -> str:
 def fetch_update_manifest_for_release(
     tag: str,
     *,
-    repo: str = "TomBadash/Mouser",
+    repo: str = "m-crescentini/Moukey",
     target_platform: str | None = None,
     timeout: float = 10.0,
     highest_trusted_build: int | None = None,

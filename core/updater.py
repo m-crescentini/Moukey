@@ -15,7 +15,7 @@ import urllib.request
 from core.version import APP_VERSION
 
 
-DEFAULT_RELEASE_REPO = "TomBadash/Mouser"
+DEFAULT_RELEASE_REPO = "m-crescentini/Moukey"
 _GITHUB_API = "https://api.github.com/repos/{repo}/releases/latest"
 _LATEST_RELEASE_URL_ENV = "MOUKEY_UPDATE_LATEST_RELEASE_URL"
 _USER_AGENT = f"Moukey/{APP_VERSION}"
