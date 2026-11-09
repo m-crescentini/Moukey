@@ -300,23 +300,18 @@ class Engine:
                 press_window_ms=g_press,
             )
 
+        # Like the keyboard keys below, these are diverted only while the ACTIVE
+        # profile maps them: a diverted button loses its native function, so
+        # "any profile maps it" left it dead in profiles where it is "none".
         has_mode_shift = _any_device_has("mode_shift")
         self.hook.divert_mode_shift = (
-            has_mode_shift
-            and any(
-                pdata.get("mappings", {}).get("mode_shift", "none") != "none"
-                for pdata in self.cfg.get("profiles", {}).values()
-            )
+            has_mode_shift and mappings.get("mode_shift", "none") != "none"
         )
 
         # Divert DPI switch CID (0x00FD) on MX Vertical when mapped.
         has_dpi_switch = _any_device_has("dpi_switch")
         self.hook.divert_dpi_switch = (
-            has_dpi_switch
-            and any(
-                pdata.get("mappings", {}).get("dpi_switch", "none") != "none"
-                for pdata in self.cfg.get("profiles", {}).values()
-            )
+            has_dpi_switch and mappings.get("dpi_switch", "none") != "none"
         )
 
         # Divert a top-row keyboard key only while the ACTIVE profile remaps it.
@@ -338,6 +333,10 @@ class Engine:
         )
         if not self._backlight_reenable_capable:
             self._backlight_reenable_active = False
+        elif self._backlight_state is not None and not self._backlight_state[0]:
+            # Backlight is off and this profile leaves the key free: re-arm the
+            # re-enable divert, which a previous profile may have dropped.
+            self._backlight_reenable_active = True
         if self._backlight_reenable_capable and self._backlight_reenable_active:
             cid = KEYBOARD_KEY_CIDS.get("kbd_backlight_up")
             if cid is not None:

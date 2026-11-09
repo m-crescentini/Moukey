@@ -759,6 +759,59 @@ class EngineReplayPhaseOneTests(unittest.TestCase):
         engine.hook._hid_gesture.read_smart_shift.assert_called_once_with()
 
 
+class EngineButtonDivertFollowsActiveProfileTests(unittest.TestCase):
+    """Mode shift / DPI switch follow the active profile too, and the
+    backlight re-enable key is re-armed when a profile frees it again."""
+
+    def _make_engine(self, **chrome_maps):
+        from core.engine import Engine
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        cfg["settings"]["backlight_follow_theme"] = True
+        cfg["profiles"]["default"]["mappings"]["mode_shift"] = "none"
+        cfg["profiles"]["chrome"] = {
+            "label": "Chrome",
+            "apps": ["chrome.exe"],
+            "mappings": dict(cfg["profiles"]["default"]["mappings"]),
+        }
+        cfg["profiles"]["chrome"]["mappings"].update(chrome_maps)
+        with (
+            patch("core.engine.DeviceHook", _FakeDeviceHook),
+            patch("core.engine.AppDetector", _FakeAppDetector),
+            patch("core.engine.load_config", return_value=cfg),
+        ):
+            return Engine()
+
+    def test_mode_shift_is_diverted_only_in_the_profile_that_maps_it(self):
+        engine = self._make_engine(mode_shift="volume_up")
+        self.assertFalse(engine.hook.divert_mode_shift)
+
+        engine._switch_profile("chrome")
+        self.assertTrue(engine.hook.divert_mode_shift)
+
+        engine._switch_profile("default")
+        self.assertFalse(engine.hook.divert_mode_shift)
+
+    def test_dpi_switch_is_diverted_only_in_the_profile_that_maps_it(self):
+        engine = self._make_engine(dpi_switch="volume_up")
+        engine._switch_profile("chrome")
+        self.assertTrue(engine.hook.divert_dpi_switch)
+        engine._switch_profile("default")
+        self.assertFalse(engine.hook.divert_dpi_switch)
+
+    def test_backlight_reenable_key_is_rearmed_after_a_profile_round_trip(self):
+        from core.logi_device_catalog import KEYBOARD_KEY_CIDS
+        up = KEYBOARD_KEY_CIDS["kbd_backlight_up"]
+        engine = self._make_engine(kbd_backlight_up="volume_up")
+        engine.hook._hid_gesture = SimpleNamespace(set_backlight=Mock())
+        engine.set_backlight(False, 0)          # light theme: backlight off
+        self.assertIn(up, engine.hook.divert_keyboard_keys)
+
+        engine._switch_profile("chrome")        # chrome maps the key itself
+        engine._switch_profile("default")
+
+        self.assertIn(up, engine.hook.divert_keyboard_keys)
+
+
 class EngineKeyboardDivertFollowsActiveProfileTests(unittest.TestCase):
     """A diverted key loses its native function, so the divert set must follow
     the active profile: a key remapped only in an app profile must stay native

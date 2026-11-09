@@ -1796,12 +1796,13 @@ class HidGestureListener:
         lo = cid & 0xFF
         return self._request(self._feat_idx, 2, [hi, lo])
 
-    def _set_cid_reporting(self, cid, flags):
+    def _set_cid_reporting(self, cid, flags, timeout_ms=2000):
         if self._feat_idx is None:
             return None
         hi = (cid >> 8) & 0xFF
         lo = cid & 0xFF
-        return self._request(self._feat_idx, 3, [hi, lo, flags, 0x00, 0x00])
+        return self._request(self._feat_idx, 3, [hi, lo, flags, 0x00, 0x00],
+                             timeout_ms=timeout_ms)
 
     def _discover_reprog_controls(self):
         controls = []
@@ -2079,7 +2080,11 @@ class HidGestureListener:
         failed: list[int] = []
         for cid in list(self._extra_diverts.keys()):
             if not self._control_present(cid):
-                continue  # device has no such control (e.g. a keyboard)
+                # Device has no such control (e.g. a keyboard asked to divert a
+                # mouse button). Drop it so later passes (wake replay, live
+                # refresh) never write a CID this device would reject.
+                self._extra_diverts.pop(cid, None)
+                continue
             resp = self._set_cid_reporting(cid, _DIVERT_BUTTON_ONLY)
             ok = resp is not None
             print(f"[HidGesture] Extra divert {_format_cid(cid)}: "
@@ -2098,9 +2103,16 @@ class HidGestureListener:
 
         Callable from any thread; the change is applied on the listener thread so
         re-mapping a key in the UI takes effect live without a reconnect."""
-        self._pending_extra_diverts = {
+        pending = {
             cid: {**info, "held": False} for cid, info in (extra or {}).items()
         }
+        self._pending_extra_diverts = pending
+        # Devices bound later (reconnect, hot-plug) start from this template, so
+        # it must track the live set. Left at its construction-time value, a
+        # re-discovered keyboard would divert the keys of the profile that was
+        # active at launch instead of the current one.
+        self._static_extra_diverts = {c: dict(i) for c, i in (extra or {}).items()}
+        self._base_extra_diverts = {c: dict(i) for c, i in pending.items()}
 
     def _apply_pending_extra_diverts(self):
         """Apply the queued extra-divert set to every device session (each only
@@ -2121,7 +2133,18 @@ class HidGestureListener:
 
     def _apply_extra_divert_delta(self, pending):
         """Converge the cursor device's diverts to *pending* (present CIDs only)."""
-        old = set(self._extra_diverts)
+        pending = dict(pending)
+        # The thumb/Actions button extra is installed per device at connect time
+        # and is not part of the engine's set; keep it, or every live refresh
+        # (profile switch, mapping edit) would silently undivert it.
+        thumb = self._thumb_button_cid
+        if thumb is not None and thumb in self._extra_diverts:
+            pending.setdefault(thumb, self._extra_diverts[thumb])
+        # Only controls this device really has take part: the engine's set
+        # covers every connected device, and writing another device's CID to
+        # this one only earns a HID++ error.
+        pending = {c: i for c, i in pending.items() if self._control_present(c)}
+        old = {c for c in self._extra_diverts if self._control_present(c)}
         new = set(pending)
         for cid in old - new:
             hi, lo = (cid >> 8) & 0xFF, cid & 0xFF
@@ -2130,12 +2153,15 @@ class HidGestureListener:
                 print(f"[HidGesture] Extra undivert {_format_cid(cid)}")
             except Exception:
                 pass
+        # A sleeping device may not answer. Use a short wait and do not let
+        # these optional writes count towards the "device asleep" threshold,
+        # which would otherwise stall every connected device.
+        timeouts_before = self._consecutive_request_timeouts
         for cid in new - old:
-            if not self._control_present(cid):
-                continue
-            ok = self._set_cid_reporting(cid, 0x03) is not None
+            ok = self._set_cid_reporting(cid, 0x03, timeout_ms=500) is not None
             print(f"[HidGesture] Extra divert {_format_cid(cid)}: "
                   f"{'OK' if ok else 'FAILED'}")
+        self._consecutive_request_timeouts = timeouts_before
         # Preserve held-state for CIDs that remain diverted.
         merged = {}
         for cid, info in pending.items():
@@ -3071,10 +3097,17 @@ class HidGestureListener:
         self._wake_reconfigure_pending = False
         self._wake_session_key = None
         flags = _DIVERT_RAW_XY if self._rawxy_enabled else _DIVERT_BUTTON_ONLY
-        ok = self._set_cid_reporting(self._gesture_cid, flags) is not None
+        # A keyboard has no gesture control: writing one only earns a HID++
+        # error, which used to be read as a failed wake and force a full
+        # reconnect of every device. Only replay controls the device has.
+        ok = True
+        if self._control_present(self._gesture_cid):
+            ok = self._set_cid_reporting(self._gesture_cid, flags) is not None
         acknowledged = set()
         if ok:
             for cid in self._extra_diverts:
+                if not self._control_present(cid):
+                    continue
                 if self._set_cid_reporting(cid, _DIVERT_BUTTON_ONLY) is None:
                     ok = False
                     break
@@ -4458,6 +4491,15 @@ class HidGestureListener:
         primary = self._sessions.get(self._primary_session)
         if primary is not None:
             self._load_cursor(primary)
+        if self._feat_idx is not None and not self._control_present(self._gesture_cid):
+            # The primary is a keyboard (no gesture control): verify the first
+            # device that actually has one instead of probing a CID it lacks.
+            for state in self._sessions.values():
+                self._load_cursor(state)
+                if self._feat_idx is not None and self._control_present(self._gesture_cid):
+                    break
+            else:
+                return
         if self._feat_idx is None:
             return  # no gesture divert to verify (e.g. keyboard only)
         if (self._held or getattr(self, "_native_hold", False)

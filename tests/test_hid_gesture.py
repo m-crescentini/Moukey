@@ -1916,5 +1916,100 @@ class DivertHealthCheckTests(unittest.TestCase):
         self.assertFalse(listener._divert_check_due)
 
 
+class ExtraDivertLifecycleTests(unittest.TestCase):
+    """Live divert refreshes, new sessions and wake replay on a keyboard."""
+
+    CALC = 0x000A
+    THUMB = 0x00C3
+
+    def _listener(self, controls=None):
+        listener = hid_gesture.HidGestureListener()
+        listener._dev = object()
+        listener._feat_idx = 0x09
+        listener._sessions = {}
+        listener._last_controls = controls if controls is not None else []
+        listener._tx = Mock()
+        listener._set_cid_reporting = Mock(return_value=(0,))
+        return listener
+
+    def test_live_refresh_keeps_the_thumb_button_extra(self):
+        listener = self._listener()
+        listener._thumb_button_cid = self.THUMB
+        listener._extra_diverts = {
+            self.THUMB: {"on_down": lambda: None, "on_up": lambda: None, "held": False}
+        }
+
+        listener.update_extra_diverts({})
+        listener._apply_pending_extra_diverts()
+
+        self.assertIn(self.THUMB, listener._extra_diverts)
+        listener._tx.assert_not_called()
+
+    def test_live_refresh_skips_controls_the_device_does_not_have(self):
+        listener = self._listener(controls=[{"cid": 0x00E9}])
+        listener._extra_diverts = {}
+
+        listener.update_extra_diverts({
+            0x00E9: {"on_down": lambda: None},
+            self.CALC: {"on_down": lambda: None},   # another device's control
+        })
+        listener._apply_pending_extra_diverts()
+
+        self.assertEqual(set(listener._extra_diverts), {0x00E9})
+        written = [call.args[0] for call in listener._set_cid_reporting.call_args_list]
+        self.assertEqual(written, [0x00E9])
+
+    def test_refresh_updates_the_template_for_devices_bound_later(self):
+        listener = hid_gesture.HidGestureListener(extra_diverts={})
+
+        listener.update_extra_diverts({self.CALC: {"on_down": lambda: None}})
+        listener._reset_device_cursor(None)
+
+        self.assertIn(self.CALC, listener._extra_diverts)
+
+    def test_unanswered_divert_writes_do_not_count_towards_sleep(self):
+        listener = self._listener(controls=[{"cid": 0x00E9}])
+        listener._extra_diverts = {}
+        listener._consecutive_request_timeouts = 1
+
+        def timed_out(cid, flags, timeout_ms=2000):
+            listener._consecutive_request_timeouts += 1
+            return None
+
+        listener._set_cid_reporting = Mock(side_effect=timed_out)
+        listener.update_extra_diverts({0x00E9: {"on_down": lambda: None}})
+        listener._apply_pending_extra_diverts()
+
+        self.assertEqual(listener._consecutive_request_timeouts, 1)
+        self.assertEqual(
+            listener._set_cid_reporting.call_args.kwargs.get("timeout_ms"), 500)
+
+    def test_connect_drops_extras_the_device_lacks(self):
+        listener = self._listener(controls=[{"cid": 0x00E9}])
+        listener._extra_diverts = {
+            0x00E9: {"on_down": lambda: None, "held": False},
+            0x00C4: {"on_down": lambda: None, "held": False},   # mouse mode shift
+        }
+
+        listener._divert_extras()
+
+        self.assertEqual(set(listener._extra_diverts), {0x00E9})
+
+    def test_keyboard_wake_does_not_write_a_gesture_cid_or_reconnect(self):
+        listener = self._listener(controls=[{"cid": 0x00E9}, {"cid": 0x00E8}])
+        listener._extra_diverts = {0x00E9: {"on_down": lambda: None, "held": False}}
+        listener._wake_reconfigure_pending = True
+        listener._wake_session_key = None
+        listener.force_reconnect = Mock()
+        written = []
+        listener._set_cid_reporting = lambda cid, flags, timeout_ms=2000: (
+            written.append(cid) or ((0,) if cid in (0x00E9, 0x00E8) else None))
+
+        self.assertTrue(listener._consume_wake_reconfiguration())
+
+        self.assertEqual(written, [0x00E9])
+        listener.force_reconnect.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
