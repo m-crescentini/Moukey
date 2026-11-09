@@ -1,7 +1,7 @@
-# Mouser — Logitech Mouse Remapper
+# Moukey — Logitech Mouse Remapper
 
 <p align="center">
-  <img src="images/logo_icon.png" width="128" alt="Mouser logo" />
+  <img src="images/logo_icon.png" width="128" alt="Moukey logo" />
 </p>
 
 English | [中文文档](README_CN.md)
@@ -56,12 +56,12 @@ keyboards, with detection and fallback UI support for additional Logitech models
 
 1. Open the [**latest release page**](https://github.com/TomBadash/Mouser/releases/latest).
 2. Download the zip for your platform:
-   - **Windows** — `Mouser-Windows.zip`
-   - **macOS (Apple Silicon)** — `Mouser-macOS.zip`
-   - **macOS (Intel)** — `Mouser-macOS-intel.zip`
-   - **Linux** — `Mouser-Linux.zip`
+   - **Windows** — `Moukey-Windows.zip`
+   - **macOS (Apple Silicon)** — `Moukey-macOS.zip`
+   - **macOS (Intel)** — `Moukey-macOS-intel.zip`
+   - **Linux** — `Moukey-Linux.zip`
 3. Extract it anywhere (Desktop, Documents, `/Applications`, wherever).
-4. Run the executable: `Mouser.exe`, `Mouser.app`, or `./Mouser`.
+4. Run the executable: `Moukey.exe`, `Moukey.app`, or `./Moukey`.
 
 That's it. The app opens, drops a tray / menu-bar icon, and starts remapping immediately.
 
@@ -69,48 +69,48 @@ That's it. The app opens, drops a tray / menu-bar icon, and starts remapping imm
 
 - The settings window opens to the device-aware **Mouse & Profiles** page.
 - A tray icon appears (next to the clock on Windows / Linux, in the menu bar on macOS).
-- Closing the window keeps Mouser running in the tray. Right-click the tray icon → **Quit Mouser** to fully exit.
-- Mouser remembers language and startup behavior between runs.
+- Closing the window keeps Moukey running in the tray. Right-click the tray icon → **Quit Moukey** to fully exit.
+- Moukey remembers language and startup behavior between runs.
 
 ### First-time notes
 
 - **Windows SmartScreen** may warn the first time — click **More info** → **Run anyway**.
-- **Logitech Options+ must not be running.** Both apps fight over HID++ access; quit Options+ before launching Mouser.
+- **Logitech Options+ must not be running.** Both apps fight over HID++ access; quit Options+ before launching Moukey.
 - **macOS** asks for **Accessibility** permission so the event tap can intercept mouse events. See [readme_mac_osx.md](readme_mac_osx.md) for the full setup walkthrough.
 - **Linux** needs read access to `/dev/hidraw*`, `/dev/input/event*`, and write access to `/dev/uinput`. Run the bundled helper once after extracting:
   ```bash
-  cd /path/to/extracted/Mouser
+  cd /path/to/extracted/Moukey
   ./install-linux-permissions.sh
   ```
   Reconnect the mouse, then relaunch.
 - Config is saved automatically to:
-  - `%APPDATA%\Mouser\config.json` (Windows)
-  - `~/Library/Application Support/Mouser/config.json` (macOS)
-  - `~/.config/Mouser/config.json` (Linux)
-- Logs rotate automatically (5 × 5 MB) under `%APPDATA%\Mouser\logs`, `~/Library/Logs/Mouser`, or `$XDG_STATE_HOME/Mouser/logs`.
+  - `%APPDATA%\Moukey\config.json` (Windows)
+  - `~/Library/Application Support/Moukey/config.json` (macOS)
+  - `~/.config/Moukey/config.json` (Linux)
+- Logs rotate automatically (5 × 5 MB) under `%APPDATA%\Moukey\logs`, `~/Library/Logs/Moukey`, or `$XDG_STATE_HOME/Moukey/logs`.
 
 ---
 
 ## Screenshots
 
 <p align="center">
-  <img src="images/Screenshot_mouse.png" alt="Mouser — Mouse & Profiles page" />
+  <img src="images/Screenshot_mouse.png" alt="Moukey — Mouse & Profiles page" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_keyboard.png" alt="Mouser — Keyboard page (Craft / MX Keys layout)" />
+  <img src="images/Screenshot_keyboard.png" alt="Moukey — Keyboard page (Craft / MX Keys layout)" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_1.png" alt="Mouser — Mouse settings" />
+  <img src="images/Screenshot_settings_1.png" alt="Moukey — Mouse settings" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_2.png" alt="Mouser — Keyboard settings" />
+  <img src="images/Screenshot_settings_2.png" alt="Moukey — Keyboard settings" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_3.png" alt="Mouser — General settings" />
+  <img src="images/Screenshot_settings_3.png" alt="Moukey — General settings" />
 </p>
 
 ---
@@ -121,7 +121,7 @@ That's it. The app opens, drops a tray / menu-bar icon, and starts remapping imm
 
 - **Remap any programmable button** — middle click, gesture button, back, forward, mode shift, DPI switch (MX Vertical), and horizontal scroll.
 - **Mouse-to-mouse remap** — bind any button to act as left, right, middle, back, or forward click.
-- **Per-application profiles** — Mouser auto-switches mappings when the foreground app changes (e.g. Chrome vs. VS Code).
+- **Per-application profiles** — Moukey auto-switches mappings when the foreground app changes (e.g. Chrome vs. VS Code).
 - **Custom keyboard shortcuts** — record any key combination (e.g. `Ctrl+Shift+P`) directly in the UI.
 - **40+ built-in actions** — navigation, browser, editing, media, scroll-mode, and DPI shortcuts that adapt per platform.
 
@@ -136,15 +136,15 @@ That's it. The app opens, drops a tray / menu-bar icon, and starts remapping imm
 ### Cross-platform
 
 - **Windows, macOS, and Linux** — native hooks per platform (`WH_MOUSE_LL`, `CGEventTap`, `evdev` + `uinput`).
-- **Native Intel and Apple Silicon macOS builds** — separate `Mouser-macOS-intel.zip` and `Mouser-macOS.zip` artifacts; the menu-bar app runs as `LSUIElement` (no Dock icon).
+- **Native Intel and Apple Silicon macOS builds** — separate `Moukey-macOS-intel.zip` and `Moukey-macOS.zip` artifacts; the menu-bar app runs as `LSUIElement` (no Dock icon).
 - **Resizable UI** — main window starts at 1060 × 700 with a 920 × 620 minimum; the mouse diagram and controls reflow as you resize.
-- **Start at login** — Windows registry key, macOS LaunchAgent, and Linux XDG autostart, with an independent **Start minimized** option that boots straight into the tray. Linux autostart intentionally waits about 15 seconds after login so Bluetooth / HID devices are usually ready before Mouser restores device settings.
+- **Start at login** — Windows registry key, macOS LaunchAgent, and Linux XDG autostart, with an independent **Start minimized** option that boots straight into the tray. Linux autostart intentionally waits about 15 seconds after login so Bluetooth / HID devices are usually ready before Moukey restores device settings.
 - **Single-instance guard** — launching a second copy brings the existing window to the front instead of starting a duplicate.
 
 ### Smart connectivity
 
 - **Bluetooth and Logi Bolt** — both transports are supported on all three platforms; the UI labels the live connection (`Logi Bolt` only when the receiver PID is positively identified).
-- **Auto-reconnection** — Mouser watches for power-off / on cycles and rebinds HID++ + the OS mouse hook without a restart; SmartShift settings are replayed on every reconnect (including wake-from-sleep).
+- **Auto-reconnection** — Moukey watches for power-off / on cycles and rebinds HID++ + the OS mouse hook without a restart; SmartShift settings are replayed on every reconnect (including wake-from-sleep).
 - **Live connection status** — real-time Connected / Not Connected badge, model name, and active layout in the UI.
 - **Device-aware UI** — interactive MX Master and MX Anywhere diagrams with clickable hotspots; generic fallback card for other models, with an experimental layout-override picker.
 
@@ -181,7 +181,7 @@ That's it. The app opens, drops a tray / menu-bar icon, and starts remapping imm
 
 ## Keyboard support
 
-Mouser remaps Logitech HID++ keyboards alongside mice. A mouse and a keyboard
+Moukey remaps Logitech HID++ keyboards alongside mice. A mouse and a keyboard
 sharing a single Unifying receiver are multiplexed, so both work at once.
 
 ### All keyboards (Craft, MX Keys, auto-classified)
@@ -260,7 +260,7 @@ Action labels adapt per platform. Windows exposes `Win+D` and `Task View`; macOS
 
 ## Build from source
 
-You only need this if you want to hack on Mouser or run a development build. Most users should grab a release zip — see [Download & Run](#download--run).
+You only need this if you want to hack on Moukey or run a development build. Most users should grab a release zip — see [Download & Run](#download--run).
 
 ### Common prerequisites
 
@@ -272,7 +272,7 @@ You only need this if you want to hack on Mouser or run a development build. Mos
 
 ```bash
 git clone https://github.com/TomBadash/Mouser.git
-cd Mouser
+cd Moukey
 python -m venv .venv
 ```
 
@@ -294,7 +294,7 @@ build.bat                # standard
 build.bat --clean        # force clean rebuild
 ```
 
-`build.bat` installs requirements, verifies that `hidapi` is importable, and packages with PyInstaller. The output lives in `dist\Mouser\` — zip the folder and ship it.
+`build.bat` installs requirements, verifies that `hidapi` is importable, and packages with PyInstaller. The output lives in `dist\Moukey\` — zip the folder and ship it.
 
 To launch a source checkout without a console window, create a shortcut that uses `pythonw.exe`; see [DEVELOPMENT.md](DEVELOPMENT.md#desktop-shortcut-windows).
 
@@ -316,18 +316,18 @@ pip install pyinstaller
 ./build_macos_app.sh
 ```
 
-The output is `dist/Mouser.app`. The script reuses `images/AppIcon.icns` when present, otherwise generates one from `images/logo_icon.png`. Signing depends on whether `MOUSER_SIGN_IDENTITY` is set in the environment:
+The output is `dist/Moukey.app`. The script reuses `images/AppIcon.icns` when present, otherwise generates one from `images/logo_icon.png`. Signing depends on whether `MOUKEY_SIGN_IDENTITY` is set in the environment:
 
 - **Unset (default)**: ad-hoc signs with `codesign --sign -`. Convenient for one-off builds, but the bundle's code identity can change on rebuild, so macOS may ask for Accessibility permission again.
-- **Set to a codesigning identity** (`security find-identity -v -p codesigning` to list them — SHA-1 form preferred): signs every nested `.dylib` / `.so` / `.framework` with hardened runtime options, then signs the outer app with the hardened-runtime exceptions at `build_resources/Mouser.entitlements`. This is a local developer signing path for repeated builds; stable macOS permission behavior depends on keeping the same source, resolved Python interpreter, dependency versions, architecture, signing identity, entitlements, and timestamp policy. A failing `codesign --verify --deep --strict` check aborts the build.
+- **Set to a codesigning identity** (`security find-identity -v -p codesigning` to list them — SHA-1 form preferred): signs every nested `.dylib` / `.so` / `.framework` with hardened runtime options, then signs the outer app with the hardened-runtime exceptions at `build_resources/Moukey.entitlements`. This is a local developer signing path for repeated builds; stable macOS permission behavior depends on keeping the same source, resolved Python interpreter, dependency versions, architecture, signing identity, entitlements, and timestamp policy. A failing `codesign --verify --deep --strict` check aborts the build.
 
 ```sh
-MOUSER_SIGN_IDENTITY="ABCD1234..." ./build_macos_app.sh   # local signed build
+MOUKEY_SIGN_IDENTITY="ABCD1234..." ./build_macos_app.sh   # local signed build
 ```
 
 - This is **not** a notarized release-signing flow. Public macOS release zips remain ad-hoc signed until a separate Developer ID signing, secure timestamp, notarization, stapling, and Gatekeeper validation workflow exists.
 - Build on the architecture you want to ship: an `arm64` Python produces an Apple Silicon bundle, an `x86_64` Python produces an Intel bundle. Set `PYINSTALLER_TARGET_ARCH=arm64|x86_64|universal2` to override.
-- Release CI publishes both `Mouser-macOS.zip` (Apple Silicon) and `Mouser-macOS-intel.zip` (Intel) automatically on tag pushes.
+- Release CI publishes both `Moukey-macOS.zip` (Apple Silicon) and `Moukey-macOS-intel.zip` (Intel) automatically on tag pushes.
 - Accessibility permission is required. See [readme_mac_osx.md](readme_mac_osx.md) for the full grant flow and platform-specific notes.
 
 </details>
@@ -348,24 +348,24 @@ python main_qml.py
 # Build a portable bundle
 sudo apt-get install libhidapi-dev
 pip install pyinstaller
-pyinstaller Mouser-linux.spec --noconfirm
+pyinstaller Moukey-linux.spec --noconfirm
 ```
 
-The helper installs `69-mouser-logitech.rules`, reloads `udev`, and tries to `modprobe uinput`. After a successful run, reconnect the mouse, fully quit Mouser, and launch normally — no `sudo`. On systems without logind / `uaccess`, adding the user to the `input` group is the distro-specific fallback.
+The helper installs `69-moukey-logitech.rules`, reloads `udev`, and tries to `modprobe uinput`. After a successful run, reconnect the mouse, fully quit Moukey, and launch normally — no `sudo`. On systems without logind / `uaccess`, adding the user to the `input` group is the distro-specific fallback.
 
 The first normal Linux launch creates or refreshes:
 
 ```text
-~/.local/share/applications/io.github.tombadash.mouser.desktop
+~/.local/share/applications/io.github.tombadash.moukey.desktop
 ```
 
-The generated launcher uses absolute paths for the current portable app or source checkout, and syncs Mouser's app icon into the per-user hicolor icon theme when possible. If you move the checkout, launch Mouser once from the new path to refresh the app-menu entry. Enabling **Start at login** also manages:
+The generated launcher uses absolute paths for the current portable app or source checkout, and syncs Moukey's app icon into the per-user hicolor icon theme when possible. If you move the checkout, launch Moukey once from the new path to refresh the app-menu entry. Enabling **Start at login** also manages:
 
 ```text
-~/.config/autostart/io.github.tombadash.mouser.desktop
+~/.config/autostart/io.github.tombadash.moukey.desktop
 ```
 
-That Linux autostart entry includes a short GNOME startup delay so Mouser does not race Bluetooth / HID initialization immediately after login.
+That Linux autostart entry includes a short GNOME startup delay so Moukey does not race Bluetooth / HID initialization immediately after login.
 
 `xdotool` enables per-app profile switching on X11; `kdotool` adds KDE Wayland support. Other Wayland compositors fall back to the default profile.
 
@@ -379,13 +379,13 @@ For project layout, the architecture diagram, the HID++ gesture detector, the En
 
 ## Limitations
 
-- **Initial Logi Bolt pairing** — Mouser does not pair a mouse with a receiver. If your MX Master 3S is not yet paired with its Logi Bolt receiver, use [Logi Web Connect](https://logiwebconnect.com/) to complete pairing first, then use Mouser to configure the mouse. Already-paired devices do not need to be paired again.
+- **Initial Logi Bolt pairing** — Moukey does not pair a mouse with a receiver. If your MX Master 3S is not yet paired with its Logi Bolt receiver, use [Logi Web Connect](https://logiwebconnect.com/) to complete pairing first, then use Moukey to configure the mouse. Already-paired devices do not need to be paired again.
 - **Per-device mappings aren't fully separated yet** — layout overrides are stored per detected device, but profile mappings are still global.
-- **Conflicts with Logitech Options+** — both apps fight over HID++ access. Quit Options+ before running Mouser.
+- **Conflicts with Logitech Options+** — both apps fight over HID++ access. Quit Options+ before running Moukey.
 - **Scroll inversion** uses coalesced post-injection on Windows to avoid LL-hook deadlocks; it's stable in mainstream apps but may misbehave in some games or low-level drivers.
-- **Admin not required** — but injected keystrokes may not reach elevated windows or some games. Run Mouser elevated if you need that path.
+- **Admin not required** — but injected keystrokes may not reach elevated windows or some games. Run Moukey elevated if you need that path.
 - **Linux app detection is partial** — X11 works via `xdotool`, KDE Wayland works via `kdotool`, GNOME / other Wayland compositors still fall back to the default profile.
-- **Linux device permissions** — Mouser needs access to `/dev/hidraw*`, `/dev/input/event*`, and `/dev/uinput`. Use [`install-linux-permissions.sh`](packaging/linux/install-linux-permissions.sh) once instead of running as root.
+- **Linux device permissions** — Moukey needs access to `/dev/hidraw*`, `/dev/input/event*`, and `/dev/uinput`. Use [`install-linux-permissions.sh`](packaging/linux/install-linux-permissions.sh) once instead of running as root.
 
 ---
 
@@ -418,7 +418,7 @@ Contributions are welcome.
 
 ## Support the project
 
-If Mouser saves you from installing Logitech Options+, consider supporting development:
+If Moukey saves you from installing Logitech Options+, consider supporting development:
 
 <p align="center">
   <a href="https://github.com/sponsors/TomBadash">
@@ -451,7 +451,7 @@ Every bit helps keep the project going — thank you.
 - **[@winniesi](https://github.com/winniesi)** - Ping-pong desktop cycling action (macOS).
 - **[@Archetipo95](https://github.com/Archetipo95)** - Physical scroll-wheel tilt support and reduced remapping latency on macOS.
 - **[@zeward-lee](https://github.com/zeward-lee)** - Scan-code injection on remapped keystrokes so side-button copy/paste reaches UWP / Store apps.
-- **[@ArtisticZhao](https://github.com/ArtisticZhao)** - Background HID polling no longer resets the system idle timer, so the display can sleep and the system can idle while Mouser runs (visibility-gated polling with an idle-grace period).
+- **[@ArtisticZhao](https://github.com/ArtisticZhao)** - Background HID polling no longer resets the system idle timer, so the display can sleep and the system can idle while Moukey runs (visibility-gated polling with an idle-grace period).
 - **[@mizi](https://github.com/mizi)** - Scroll Force control: adjustable ratchet firmness for enhanced SmartShift (HID++ `0x2111`) devices, with a per-device Scroll page slider.
 - **[@kevin-nous](https://github.com/kevin-nous)** - Original per-button slide-gesture concept (event-tap arming, dual-mode tap/gesture), which inspired the cross-platform "Gesture Swipe" action: any device-advertised button becomes a hold-and-slide gesture pad on Windows, macOS, and Linux.
 - **[@unijiang](https://github.com/unijiang)** - Logitech M585/M590 Multi-Device Mouse support: device catalog entry (name/alias matched to avoid over-claiming the shared receiver PID), interactive hotspot layout, and wheel-tilt exposure as configurable left/right controls.
@@ -463,4 +463,4 @@ Every bit helps keep the project going — thank you.
 
 This project is licensed under the [MIT License](LICENSE).
 
-**Mouser** is not affiliated with or endorsed by Logitech. "Logitech", "MX Master", and "Options+" are trademarks of Logitech International S.A.
+**Moukey** is not affiliated with or endorsed by Logitech. "Logitech", "MX Master", and "Options+" are trademarks of Logitech International S.A.

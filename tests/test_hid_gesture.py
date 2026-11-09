@@ -590,7 +590,7 @@ class HidLivenessPingTests(unittest.TestCase):
     """A resumed Windows box can leave our HID handle open against a device
     stack it has already replaced: reads never fail, they just never return
     anything again, so the listener sits "connected" against a dead pipe until
-    the user restarts Mouser (issue #263). The ping is what turns that silence
+    the user restarts Moukey (issue #263). The ping is what turns that silence
     into a verdict."""
 
     def _connected_listener(self):

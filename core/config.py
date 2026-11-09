@@ -5,6 +5,7 @@ Supports per-application profiles (for future use).
 
 import json
 import os
+import shutil
 import stat
 import sys
 import tempfile
@@ -17,15 +18,38 @@ from core.logi_device_catalog import (
 from core.locales import SYSTEM_LANGUAGE, normalize_language_preference
 
 if sys.platform == "darwin":
-    CONFIG_DIR = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mouser")
+    CONFIG_DIR = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Moukey")
 elif sys.platform == "linux":
     CONFIG_DIR = os.path.join(
         os.environ.get("XDG_CONFIG_HOME", os.path.join(os.path.expanduser("~"), ".config")),
-        "Mouser",
+        "Moukey",
     )
 else:
-    CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "Mouser")
+    CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "Moukey")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+
+# The app used to be called "Mouser" and kept its settings in a sibling folder.
+# On first run of the renamed app the old config.json is copied (never moved,
+# so an older build keeps working) into the new folder.
+_DEFAULT_CONFIG_DIR = CONFIG_DIR
+LEGACY_CONFIG_DIR = os.path.join(os.path.dirname(CONFIG_DIR), "Mouser")
+
+
+def migrate_legacy_config(new_dir, legacy_dir):
+    """Copy ``config.json`` from *legacy_dir* to *new_dir* when the new folder
+    has none yet. Returns True when a file was copied. Never raises."""
+    try:
+        new_file = os.path.join(new_dir, "config.json")
+        old_file = os.path.join(legacy_dir, "config.json")
+        if os.path.exists(new_file) or not os.path.isfile(old_file):
+            return False
+        os.makedirs(new_dir, mode=0o700, exist_ok=True)
+        shutil.copyfile(old_file, new_file)
+        print(f"[Config] Migrated settings from {old_file}")
+        return True
+    except Exception as exc:
+        print(f"[Config] Could not migrate legacy settings: {exc}")
+        return False
 
 # Which mouse events map to which friendly button names
 # Order matches the Logi Options+ diagram (top view then side view)
@@ -198,7 +222,7 @@ CRAFT_CROWN_DEFAULTS = {
     "crown_press_right": "next_track",
 }
 
-# Top-row keys default to "none": Mouser leaves them native until remapped.
+# Top-row keys default to "none": Moukey leaves them native until remapped.
 KEYBOARD_KEY_DEFAULTS = {key: "none" for key in KEYBOARD_KEY_BUTTONS}
 
 # Maps config button keys to the DeviceEvent types they correspond to.
@@ -388,6 +412,9 @@ def get_icon_for_exe(exe_name: str) -> str:
 
 def ensure_config_dir():
     os.makedirs(CONFIG_DIR, mode=0o700, exist_ok=True)
+    # Only for the real per-user folder: tests point CONFIG_DIR at a temp dir.
+    if CONFIG_DIR == _DEFAULT_CONFIG_DIR:
+        migrate_legacy_config(CONFIG_DIR, LEGACY_CONFIG_DIR)
 
 
 def load_config():

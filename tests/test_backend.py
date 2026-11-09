@@ -138,10 +138,10 @@ class BackendDeviceLayoutTests(unittest.TestCase):
 
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_device_image_source_uses_encoded_file_url(self):
-        backend = self._make_backend(root_dir="/tmp/Mouser Build")
+        backend = self._make_backend(root_dir="/tmp/Moukey Build")
 
         expected = QUrl.fromLocalFile(
-            "/tmp/Mouser Build/images/icons/mouse-simple.svg"
+            "/tmp/Moukey Build/images/icons/mouse-simple.svg"
         ).toString()
 
         self.assertEqual(backend.deviceImageSource, expected)
@@ -224,17 +224,17 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             assets={
                 "macos-arm64": UpdateAsset(
                     "macos-arm64",
-                    "Mouser-macOS.zip",
-                    "https://example.test/Mouser-macOS.zip",
+                    "Moukey-macOS.zip",
+                    "https://example.test/Moukey-macOS.zip",
                     1,
                     "a" * 64,
                 )
             },
         )
         runtime = RuntimeLocation(
-            executable=Path("/Applications/Mouser.app/Contents/MacOS/Mouser"),
-            install_root=Path("/Applications/Mouser.app"),
-            app_data_dir=Path("/tmp/mouser"),
+            executable=Path("/Applications/Moukey.app/Contents/MacOS/Moukey"),
+            install_root=Path("/Applications/Moukey.app"),
+            app_data_dir=Path("/tmp/moukey"),
             frozen=True,
             platform_key="macos-arm64",
             update_supported=False,
@@ -281,17 +281,17 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             assets={
                 "windows-x64": UpdateAsset(
                     "windows-x64",
-                    "Mouser-Windows.zip",
-                    "https://example.test/Mouser-Windows.zip",
+                    "Moukey-Windows.zip",
+                    "https://example.test/Moukey-Windows.zip",
                     1,
                     "a" * 64,
                 )
             },
         )
         runtime = RuntimeLocation(
-            executable=Path("C:/Mouser/Mouser.exe"),
-            install_root=Path("C:/Mouser"),
-            app_data_dir=Path("C:/Users/test/AppData/Local/Mouser"),
+            executable=Path("C:/Moukey/Moukey.exe"),
+            install_root=Path("C:/Moukey"),
+            app_data_dir=Path("C:/Users/test/AppData/Local/Moukey"),
             frozen=True,
             platform_key="windows-x64",
             update_supported=True,
@@ -336,17 +336,17 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             assets={
                 "windows-x64": UpdateAsset(
                     "windows-x64",
-                    "Mouser-Windows.zip",
-                    "https://example.test/Mouser-Windows.zip",
+                    "Moukey-Windows.zip",
+                    "https://example.test/Moukey-Windows.zip",
                     1,
                     "a" * 64,
                 )
             },
         )
         runtime = RuntimeLocation(
-            executable=Path("C:/Program Files/Mouser/Mouser.exe"),
-            install_root=Path("C:/Program Files/Mouser"),
-            app_data_dir=Path("C:/Users/test/AppData/Local/Mouser"),
+            executable=Path("C:/Program Files/Moukey/Moukey.exe"),
+            install_root=Path("C:/Program Files/Moukey"),
+            app_data_dir=Path("C:/Users/test/AppData/Local/Moukey"),
             frozen=True,
             platform_key="windows-x64",
             update_supported=False,
@@ -354,7 +354,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
         )
 
         with (
-            patch.dict("os.environ", {"MOUSER_ENABLE_UPDATE_INSTALL": "1"}),
+            patch.dict("os.environ", {"MOUKEY_ENABLE_UPDATE_INSTALL": "1"}),
             patch("ui.backend.fetch_update_manifest_for_release", return_value=manifest),
             patch("ui.backend.locate_runtime", return_value=runtime),
             patch("ui.backend.prepare_downloaded_asset") as prepare_asset,
@@ -379,7 +379,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            install = root / "Mouser"
+            install = root / "Moukey"
             install.mkdir()
             backend = self._make_backend()
             backend._latest_update_version = "3.7.0"
@@ -396,33 +396,33 @@ class BackendDeviceLayoutTests(unittest.TestCase):
                 assets={
                     "windows-x64": UpdateAsset(
                         "windows-x64",
-                        "Mouser-Windows.zip",
-                        "https://example.test/Mouser-Windows.zip",
+                        "Moukey-Windows.zip",
+                        "https://example.test/Moukey-Windows.zip",
                         1,
                         "a" * 64,
                     )
                 },
             )
             runtime = RuntimeLocation(
-                executable=install / "Mouser.exe",
+                executable=install / "Moukey.exe",
                 install_root=install,
                 app_data_dir=root / "data",
                 frozen=True,
                 platform_key="windows-x64",
                 update_supported=True,
             )
-            archive = root / "Mouser-Windows.zip"
-            staged_app = root / ".Mouser.update-v3.7.0-1234" / "Mouser"
+            archive = root / "Moukey-Windows.zip"
+            staged_app = root / ".Moukey.update-v3.7.0-1234" / "Moukey"
             staged = StagedUpdate(
                 archive_path=archive,
                 stage_dir=staged_app.parent,
                 app_root=staged_app,
                 platform_key="windows-x64",
-                asset_name="Mouser-Windows.zip",
+                asset_name="Moukey-Windows.zip",
             )
 
             with (
-                patch.dict("os.environ", {"MOUSER_ENABLE_UPDATE_INSTALL": "1"}),
+                patch.dict("os.environ", {"MOUKEY_ENABLE_UPDATE_INSTALL": "1"}),
                 patch("ui.backend.fetch_update_manifest_for_release", return_value=manifest),
                 patch("ui.backend.locate_runtime", return_value=runtime),
                 patch("ui.backend.prepare_downloaded_asset", return_value=archive),
@@ -435,7 +435,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             extract_zip.assert_called_once()
             stage_arg = extract_zip.call_args.args[1]
             self.assertEqual(stage_arg.parent, install.resolve().parent)
-            self.assertEqual(stage_arg.name, ".Mouser.update-v3.7.0-1234")
+            self.assertEqual(stage_arg.name, ".Moukey.update-v3.7.0-1234")
             self.assertEqual(backend.updateInstallStatus, "ready_to_install")
             self.assertTrue(backend.updateInstallCanInstall)
 
@@ -445,7 +445,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
         backend._update_install_can_install = True
 
         with (
-            patch.dict("os.environ", {"MOUSER_ENABLE_UPDATE_INSTALL": "1"}),
+            patch.dict("os.environ", {"MOUKEY_ENABLE_UPDATE_INSTALL": "1"}),
             patch("ui.backend.launch_windows_update_helper") as launch_helper,
             patch("ui.backend.QCoreApplication.quit") as quit_app,
         ):
@@ -462,7 +462,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
         backend._update_install_can_install = True
 
         with (
-            patch.dict("os.environ", {"MOUSER_ENABLE_UPDATE_INSTALL": "1"}),
+            patch.dict("os.environ", {"MOUKEY_ENABLE_UPDATE_INSTALL": "1"}),
             patch(
                 "ui.backend.launch_windows_update_helper",
                 side_effect=OSError("helper failed"),
@@ -493,7 +493,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             backend = self._make_backend()
             backend._latest_update_version = "3.7.0"
             runtime = RuntimeLocation(
-                executable=data / "Mouser.exe",
+                executable=data / "Moukey.exe",
                 install_root=data,
                 app_data_dir=data,
                 frozen=True,
@@ -511,7 +511,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             with patch("ui.backend.threading.Thread", side_effect=make_thread):
                 backend.prepareLatestUpdate()
 
-            self.assertEqual(captured["name"], "MouserPrepareUpdate")
+            self.assertEqual(captured["name"], "MoukeyPrepareUpdate")
             self.assertTrue(captured["daemon"])
 
             backend.cancelUpdatePreparation()
@@ -546,17 +546,17 @@ class BackendDeviceLayoutTests(unittest.TestCase):
             assets={
                 "macos-arm64": UpdateAsset(
                     "macos-arm64",
-                    "Mouser-macOS.zip",
-                    "https://example.test/Mouser-macOS.zip",
+                    "Moukey-macOS.zip",
+                    "https://example.test/Moukey-macOS.zip",
                     1,
                     "a" * 64,
                 )
             },
         )
         runtime = RuntimeLocation(
-            executable=Path("/Applications/Mouser.app/Contents/MacOS/Mouser"),
-            install_root=Path("/Applications/Mouser.app"),
-            app_data_dir=Path("/tmp/mouser"),
+            executable=Path("/Applications/Moukey.app/Contents/MacOS/Moukey"),
+            install_root=Path("/Applications/Moukey.app"),
+            app_data_dir=Path("/tmp/moukey"),
             frozen=True,
             platform_key="macos-arm64",
             update_supported=False,
@@ -587,7 +587,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            install = root / "Mouser"
+            install = root / "Moukey"
             install.mkdir()
             backend = self._make_backend()
             backend._latest_update_version = "3.7.0"
@@ -604,23 +604,23 @@ class BackendDeviceLayoutTests(unittest.TestCase):
                 assets={
                     "windows-x64": UpdateAsset(
                         "windows-x64",
-                        "Mouser-Windows.zip",
-                        "https://example.test/Mouser-Windows.zip",
+                        "Moukey-Windows.zip",
+                        "https://example.test/Moukey-Windows.zip",
                         1,
                         "a" * 64,
                     )
                 },
             )
             runtime = RuntimeLocation(
-                executable=install / "Mouser.exe",
+                executable=install / "Moukey.exe",
                 install_root=install,
                 app_data_dir=root / "data",
                 frozen=True,
                 platform_key="windows-x64",
                 update_supported=True,
             )
-            archive = root / "Mouser-Windows.zip"
-            stage_dir = root / ".Mouser.update-v3.7.0-1234"
+            archive = root / "Moukey-Windows.zip"
+            stage_dir = root / ".Moukey.update-v3.7.0-1234"
 
             def fail_extract(_archive, stage_arg, **_kwargs):
                 self.assertEqual(stage_arg, stage_dir)
@@ -629,7 +629,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
                 raise UpdateInstallError("bad_archive", "bad archive")
 
             with (
-                patch.dict("os.environ", {"MOUSER_ENABLE_UPDATE_INSTALL": "1"}),
+                patch.dict("os.environ", {"MOUKEY_ENABLE_UPDATE_INSTALL": "1"}),
                 patch("ui.backend.fetch_update_manifest_for_release", return_value=manifest),
                 patch("ui.backend.locate_runtime", return_value=runtime),
                 patch("ui.backend.prepare_downloaded_asset", return_value=archive),
@@ -656,7 +656,7 @@ class BackendDeviceLayoutTests(unittest.TestCase):
                 encoding="utf-8",
             )
             runtime = RuntimeLocation(
-                executable=data / "Mouser.exe",
+                executable=data / "Moukey.exe",
                 install_root=data,
                 app_data_dir=data,
                 frozen=True,
@@ -1614,7 +1614,7 @@ class BackendLoginStartupTests(unittest.TestCase):
         self.assertFalse(backend.startAtLogin)
         self.assertEqual(
             status_messages,
-            ["Start-at-login state is inconsistent; please restart Mouser to recover."],
+            ["Start-at-login state is inconsistent; please restart Moukey to recover."],
         )
 
     def test_set_start_minimized_does_not_call_apply_login_startup(self):
@@ -1638,7 +1638,7 @@ class BackendLoginStartupTests(unittest.TestCase):
 @unittest.skipIf(Backend is None, "PySide6 not installed in test environment")
 class BackendHandleDpiReadTests(unittest.TestCase):
     """Device-reported DPI must persist to ``config.json`` so a hardware
-    DPI change taken on the mouse survives the next Mouser restart, and
+    DPI change taken on the mouse survives the next Moukey restart, and
     must clamp into the connected device's range to defend against
     bogus reports."""
 

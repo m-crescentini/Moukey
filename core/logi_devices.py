@@ -1,5 +1,5 @@
 """
-Known Logitech device metadata used to scale Mouser beyond a single mouse model.
+Known Logitech device metadata used to scale Moukey beyond a single mouse model.
 
 This module intentionally keeps the catalog lightweight: enough structure to
 identify common HID++ mice, surface the right model name in the UI, and hang
@@ -427,7 +427,7 @@ class ConnectedDeviceInfo:
     thumb_button_via_hid: bool = False
 
 
-# Seeded from Mouser's own device catalog first, then extended with broader
+# Seeded from Moukey's own device catalog first, then extended with broader
 # family support for devices that still use a shared layout.
 KNOWN_LOGI_DEVICES = tuple(
     LogiDeviceSpec(**spec) for spec in LOGI_DEVICE_SPECS

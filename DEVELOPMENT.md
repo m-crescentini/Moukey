@@ -1,6 +1,6 @@
 # Development Guide
 
-This document contains the technical details a developer needs to navigate Mouser. The user-facing tour lives in [README.md](README.md); this guide covers how the codebase is wired together, how the platform-specific hooks behave, and how to build / debug locally.
+This document contains the technical details a developer needs to navigate Moukey. The user-facing tour lives in [README.md](README.md); this guide covers how the codebase is wired together, how the platform-specific hooks behave, and how to build / debug locally.
 
 ## Contents
 
@@ -32,7 +32,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-On macOS, `requirements.txt` installs PyObjC (`objc`, Quartz, and AppKit bindings), which Mouser needs for CGEventTap, app detection, and key simulation.
+On macOS, `requirements.txt` installs PyObjC (`objc`, Quartz, and AppKit bindings), which Moukey needs for CGEventTap, app detection, and key simulation.
 
 Run the test suite from the activated environment:
 
@@ -42,7 +42,7 @@ python -m unittest discover -s tests
 
 ## Entry Point: `main_qml.py`
 
-`main_qml.py` is the primary launch script for Mouser, bringing together the core processing logic (Engine) and the graphical user interface (QML Backend). It replaces an older `tkinter`-based interface.
+`main_qml.py` is the primary launch script for Moukey, bringing together the core processing logic (Engine) and the graphical user interface (QML Backend). It replaces an older `tkinter`-based interface.
 
 ### What the Code is Responsible For
 
@@ -70,7 +70,7 @@ python -m unittest discover -s tests
 4. **Execution Flow:**
    - `qml_engine.load(...)` parses and renders `Main.qml`.
    - A deferral (`QTimer.singleShot(0, ...)`) is queued to start the `Engine` asynchronously.
-   - If `--start-hidden` is present, the window is kept hidden and Mouser starts as a tray / menu-bar app first.
+   - If `--start-hidden` is present, the window is kept hidden and Moukey starts as a tray / menu-bar app first.
    - Execution hands over to `app.exec()`, blocking the main thread to run the Qt UI event loop.
    - `engine.stop()` gracefully shuts down background threads when the Qt event loop terminates.
 
@@ -112,7 +112,7 @@ The arrows match the runtime call graph: the OS-level mouse hook feeds events in
 
 ### Mouse hook
 
-Mouser exposes a single `DeviceHook` façade in [`core/device_hook.py`](core/device_hook.py) and dispatches to a per-platform implementation:
+Moukey exposes a single `DeviceHook` façade in [`core/device_hook.py`](core/device_hook.py) and dispatches to a per-platform implementation:
 
 - **Windows** — [`core/device_hook_windows.py`](core/device_hook_windows.py): `SetWindowsHookExW` with `WH_MOUSE_LL` on a dedicated background thread, plus Raw Input for extra mouse data.
 - **macOS** — [`core/device_hook_macos.py`](core/device_hook_macos.py): `CGEventTap` for interception and Quartz events for key simulation. The tap callback is wrapped with `@_autoreleased` to recycle Foundation objects every event (closing a ~1.4 GB leak that appeared under load) and the tap auto re-enables itself when the system disables it on timeout. Because action *execution* runs on other pool-less threads (the mouse-hook dispatch worker, the HID gesture thread, and the safety-release timers), the dispatch worker also wraps `_dispatch` in an autorelease pool and the [`core/key_simulator.py`](core/key_simulator.py) injection entry points are `@_autoreleased` too — otherwise the `CGEvent`/`NSEvent` objects created per click leak for the process lifetime (issue #233).
@@ -130,22 +130,22 @@ All paths feed the same internal event model and intercept:
 - `WM_MOUSEHWHEEL` — horizontal scroll
 - `WM_MOUSEWHEEL` — vertical scroll (for inversion)
 
-Intercepted events are either **blocked** (hook returns `1`) and replaced with an action, or **passed through** to the foreground application. Synthetic events Mouser injects itself are tagged so the hook ignores them on the way back in (Windows uses an event marker; macOS uses `kCGEventSourceUserData`).
+Intercepted events are either **blocked** (hook returns `1`) and replaced with an action, or **passed through** to the foreground application. Synthetic events Moukey injects itself are tagged so the hook ignores them on the way back in (Windows uses an event marker; macOS uses `kCGEventSourceUserData`).
 
 ### Device catalog & layout registry
 
-- [`core/logi_device_catalog.py`](core/logi_device_catalog.py) holds Mouser's curated per-device Logitech specs, image assets, and hotspot coordinates for dedicated control surfaces.
+- [`core/logi_device_catalog.py`](core/logi_device_catalog.py) holds Moukey's curated per-device Logitech specs, image assets, and hotspot coordinates for dedicated control surfaces.
 - [`core/logi_devices.py`](core/logi_devices.py) resolves known product IDs and model aliases into a `ConnectedDeviceInfo` record with display name, DPI range, preferred gesture CIDs, supported buttons, and default UI layout key.
 - [`core/device_layouts.py`](core/device_layouts.py) stores built-in family layouts plus catalog layouts, layout notes, and whether a layout is interactive or only a generic fallback. `_FAMILY_FALLBACKS` maps per-model keys to family layout keys until a dedicated overlay exists.
 - [`ui/backend.py`](ui/backend.py) combines auto-detected device info with any persisted per-device layout override and exposes the effective layout to QML.
 
 ### Gesture button detection
 
-Logitech gesture / thumb buttons do not always appear as standard mouse events. Mouser uses a layered detector inside [`core/hid_gesture.py`](core/hid_gesture.py):
+Logitech gesture / thumb buttons do not always appear as standard mouse events. Moukey uses a layered detector inside [`core/hid_gesture.py`](core/hid_gesture.py):
 
 1. **HID++ 2.0 (primary)** — opens the Logitech HID collection, discovers `REPROG_CONTROLS_V4` (feature `0x1B04`), ranks gesture CID candidates from the device registry plus control-capability heuristics, and diverts the best candidate. When supported, RawXY movement data is also enabled.
 2. **Raw Input (Windows fallback)** — registers for raw mouse input and detects extra button bits beyond the standard 5.
-3. **Gesture tap / swipe dispatch** — a clean press/release emits `gesture_click`; once movement crosses the configured threshold, Mouser emits directional swipe actions instead.
+3. **Gesture tap / swipe dispatch** — a clean press/release emits `gesture_click`; once movement crosses the configured threshold, Moukey emits directional swipe actions instead.
 
 The same module owns the SmartShift integration. It prefers the enhanced feature `0x2111` (`FEAT_SMART_SHIFT_ENHANCED`) when available and falls back to `0x2110`, exposing both an enable flag and a sensitivity threshold; pending settings are re-applied on every reconnect (including wake-from-sleep).
 
@@ -163,7 +163,7 @@ The same module owns the SmartShift integration. It prefers the enhanced feature
 
 ### Device reconnection
 
-Mouser handles mouse power-off / on cycles automatically:
+Moukey handles mouse power-off / on cycles automatically:
 
 A `0x1D4B` wireless-status wake queues a configuration replay on the HID
 listener loop. After the current request completes and held controls are
@@ -175,12 +175,12 @@ haptic/force and wheel settings. This path adds no periodic polling.
 - **HID++ layer** — `HidGestureListener` detects device disconnection (read errors) and enters a reconnect loop, retrying every 2–5 seconds until the device returns. Pending SmartShift / scroll-mode settings are replayed on reconnect.
 - **Hook layer** — `DeviceHook` listens for `WM_DEVICECHANGE` (Windows) and platform equivalents elsewhere, reinstalling the low-level hook when devices are added or removed.
 - **Sleep / resume (Windows)** — `WM_POWERBROADCAST`, console display-state and session-unlock notifications all funnel into one `_on_system_resume` worker, which owns the complete 0.5 s / 3 s / 10 s recovery ladder. Later cues join the active worker even when display-on and unlock are more than five seconds apart. HID reconnect generations make a fresh connection satisfy requests received during discovery, while a later request still invalidates the handle. `WM_DEVICECHANGE` wakes a disconnected listener out of its bounded reconnect backoff when a new Bolt HID path appears, without invalidating a healthy connection.
-- **Liveness watchdog** — both halves of Mouser can die without raising anything. Windows silently removes a low-level hook whose procedure overruns `LowLevelHooksTimeout`, and a resume can leave the HID++ handle open against an orphaned device where reads never fail and never return. `BaseDeviceHook` polls every 5 s and acts only on evidence: the hook is judged against raw input (same events, independent delivery path), and a HID++ handle that has been quiet for 90 s while the mouse is demonstrably in use is asked to answer a root request. Silence on its own is never treated as a fault — an idle mouse is silent on every channel.
+- **Liveness watchdog** — both halves of Moukey can die without raising anything. Windows silently removes a low-level hook whose procedure overruns `LowLevelHooksTimeout`, and a resume can leave the HID++ handle open against an orphaned device where reads never fail and never return. `BaseDeviceHook` polls every 5 s and acts only on evidence: the hook is judged against raw input (same events, independent delivery path), and a HID++ handle that has been quiet for 90 s while the mouse is demonstrably in use is asked to answer a root request. Silence on its own is never treated as a fault — an idle mouse is silent on every channel.
 - **UI layer** — connection state and device identity flow from HID++ → DeviceHook → Engine → Backend (cross-thread safe via Qt signals) → QML, updating the status badge, device name, and active layout in real time.
 
 ### Configuration
 
-All settings live in `config.json` under the platform config dir (`%APPDATA%\Mouser`, `~/Library/Application Support/Mouser`, `~/.config/Mouser`). The schema supports:
+All settings live in `config.json` under the platform config dir (`%APPDATA%\Moukey`, `~/Library/Application Support/Moukey`, `~/.config/Moukey`). The schema supports:
 
 - Multiple named profiles with per-profile button mappings, including gesture tap + swipe actions
 - Per-profile app associations (list of `.exe` / bundle / process names)
@@ -188,7 +188,7 @@ All settings live in `config.json` under the platform config dir (`%APPDATA%\Mou
 - Per-device layout override selections for unsupported devices
 - Automatic migration from older config versions (current version `10`)
 
-Logs are written via [`core/log_setup.py`](core/log_setup.py) to a 5 × 5 MB rotating file in `~/Library/Logs/Mouser`, `%APPDATA%\Mouser\logs`, or `$XDG_STATE_HOME/Mouser/logs`. The setup is idempotent and safe to call multiple times — `main_qml.py` invokes it before any Qt or core import so startup output is captured from the very first line.
+Logs are written via [`core/log_setup.py`](core/log_setup.py) to a 5 × 5 MB rotating file in `~/Library/Logs/Moukey`, `%APPDATA%\Moukey\logs`, or `$XDG_STATE_HOME/Moukey/logs`. The setup is idempotent and safe to call multiple times — `main_qml.py` invokes it before any Qt or core import so startup output is captured from the very first line.
 
 ## UI overview
 
@@ -213,7 +213,7 @@ On Windows the Super key can't be recorded through Qt alone: the shell acts on t
 
 - **DPI slider** — 200 to the device max with quick presets (400, 800, 1000, 1600, 2400, 4000, 6000, 8000). Reads the current DPI from the device on startup.
 - **Scroll inversion** — independent toggles for vertical and horizontal scroll direction.
-- **Ignore trackpad (macOS)** — keep trackpad and Magic Mouse continuous scroll out of Mouser mappings. Disable only if you intentionally want Mouser to handle them.
+- **Ignore trackpad (macOS)** — keep trackpad and Magic Mouse continuous scroll out of Moukey mappings. Disable only if you intentionally want Moukey to handle them.
 - **Smart Shift** — toggle ratchet ↔ free-spin (HID++ `0x2111`) plus a sensitivity threshold; status syncs every 15 s and on every reconnect.
 - **Startup controls** — **Start at login** (Windows + macOS) and **Start minimized** (all platforms).
 
@@ -222,13 +222,13 @@ The window itself is resizable: default 1060 × 700 with a 920 × 620 minimum (`
 ## Project structure
 
 ```
-mouser/
+moukey/
 ├── main_qml.py                  # Application entry point (PySide6 + QML)
-├── Mouser.bat                   # Quick-launch batch file
-├── Mouser.spec / Mouser-mac.spec / Mouser-linux.spec  # PyInstaller specs
+├── Moukey.bat                   # Quick-launch batch file
+├── Moukey.spec / Moukey-mac.spec / Moukey-linux.spec  # PyInstaller specs
 ├── build.bat                    # Windows build (installs deps, verifies hidapi, packages)
 ├── build_macos_app.sh           # macOS bundle build + icon/signing flow
-├── packaging/linux/             # 69-mouser-logitech.rules + install-linux-permissions.sh
+├── packaging/linux/             # 69-moukey-logitech.rules + install-linux-permissions.sh
 ├── .github/workflows/
 │   ├── ci.yml                   # CI checks (compile, tests, QML lint)
 │   └── release.yml              # Automated release builds (Windows / macOS arm64+intel / Linux)
@@ -303,10 +303,10 @@ build.bat --clean         # nuke build/ and dist/ before rebuilding
 
 # Manual path
 pip install -r requirements.txt pyinstaller
-pyinstaller Mouser.spec --noconfirm
+pyinstaller Moukey.spec --noconfirm
 ```
 
-`build.bat` fails early if `hidapi` is not importable, which prevents shipping a build that cannot detect Logitech devices. Output: `dist\Mouser\` — zip the folder for distribution.
+`build.bat` fails early if `hidapi` is not importable, which prevents shipping a build that cannot detect Logitech devices. Output: `dist\Moukey\` — zip the folder for distribution.
 
 ### macOS
 
@@ -315,43 +315,43 @@ pip install -r requirements.txt pyinstaller
 ./build_macos_app.sh
 ```
 
-The script reuses `images/AppIcon.icns` when present, otherwise generates one from `images/logo_icon.png`, then runs PyInstaller with `Mouser-mac.spec`. Output: `dist/Mouser.app`. The bundle runs as `LSUIElement`.
+The script reuses `images/AppIcon.icns` when present, otherwise generates one from `images/logo_icon.png`, then runs PyInstaller with `Moukey-mac.spec`. Output: `dist/Moukey.app`. The bundle runs as `LSUIElement`.
 
-Signing is driven by `MOUSER_SIGN_IDENTITY`:
+Signing is driven by `MOUKEY_SIGN_IDENTITY`:
 
 - Unset: the bundle is ad-hoc signed (`codesign --sign -`). The bundle's code identity can change on rebuild, so macOS may ask for Accessibility permission again. Fine for one-off builds.
-- Set to a codesigning identity SHA-1 (list with `security find-identity -v -p codesigning`): the script signs nested `.dylib` / `.so` / `.framework` files depth-first with `--options runtime`, then signs the outer bundle with the hardened-runtime exceptions at `build_resources/Mouser.entitlements` (`allow-jit`, `allow-unsigned-executable-memory`, `disable-library-validation`), then runs `codesign --verify --deep --strict --verbose=2` and aborts the build if verification fails. This local developer signing path can reduce macOS Accessibility permission churn across repeated builds when the source, resolved Python interpreter, dependency versions, architecture, signing identity, entitlements, and timestamp policy stay the same.
+- Set to a codesigning identity SHA-1 (list with `security find-identity -v -p codesigning`): the script signs nested `.dylib` / `.so` / `.framework` files depth-first with `--options runtime`, then signs the outer bundle with the hardened-runtime exceptions at `build_resources/Moukey.entitlements` (`allow-jit`, `allow-unsigned-executable-memory`, `disable-library-validation`), then runs `codesign --verify --deep --strict --verbose=2` and aborts the build if verification fails. This local developer signing path can reduce macOS Accessibility permission churn across repeated builds when the source, resolved Python interpreter, dependency versions, architecture, signing identity, entitlements, and timestamp policy stay the same.
 
-The script picks the Python interpreter in this order: `MOUSER_PYTHON` env override → active `$VIRTUAL_ENV/bin/python3` or `bin/python` → `./.venv/bin/python3` or `bin/python` → `python3` or `python` on `PATH`. It fails fast with an explicit error if the selected interpreter is missing PyInstaller, so a half-set-up environment can't silently produce a different bundle layout. pyenv, uv, Conda, asdf, Poetry, and similar tools are supported through the active virtualenv, normal `PATH`, or `MOUSER_PYTHON`; the script does not call those tools directly. pyenv users should initialize shims in the shell so `python3` resolves through pyenv, or set `MOUSER_PYTHON` explicitly.
+The script picks the Python interpreter in this order: `MOUKEY_PYTHON` env override → active `$VIRTUAL_ENV/bin/python3` or `bin/python` → `./.venv/bin/python3` or `bin/python` → `python3` or `python` on `PATH`. It fails fast with an explicit error if the selected interpreter is missing PyInstaller, so a half-set-up environment can't silently produce a different bundle layout. pyenv, uv, Conda, asdf, Poetry, and similar tools are supported through the active virtualenv, normal `PATH`, or `MOUKEY_PYTHON`; the script does not call those tools directly. pyenv users should initialize shims in the shell so `python3` resolves through pyenv, or set `MOUKEY_PYTHON` explicitly.
 
 `PYTHONHASHSEED=0` is pinned for the PyInstaller invocation so set iteration during the analysis stage produces byte-identical `base_library.zip` output across rebuilds (otherwise the outer `cdhash` drifts even with a stable signing identity).
 
-The `MOUSER_SIGN_IDENTITY` path is not a notarized release-signing workflow. Public macOS release zips remain ad-hoc signed until a separate Developer ID Application signing, secure timestamp, notarization, stapling, and Gatekeeper assessment workflow exists.
+The `MOUKEY_SIGN_IDENTITY` path is not a notarized release-signing workflow. Public macOS release zips remain ad-hoc signed until a separate Developer ID Application signing, secure timestamp, notarization, stapling, and Gatekeeper assessment workflow exists.
 
 - Build on the architecture you want to ship. `arm64` Python → Apple Silicon, `x86_64` Python → Intel.
 - Set `PYINSTALLER_TARGET_ARCH=arm64|x86_64|universal2` to override (when your Python supports the target).
-- Release CI publishes both `Mouser-macOS.zip` and `Mouser-macOS-intel.zip`.
+- Release CI publishes both `Moukey-macOS.zip` and `Moukey-macOS-intel.zip`.
 
 ### Linux
 
 ```bash
 sudo apt-get install libhidapi-dev
 pip install pyinstaller
-pyinstaller Mouser-linux.spec --noconfirm
+pyinstaller Moukey-linux.spec --noconfirm
 ```
 
-Output: `dist/Mouser/`. The release pipeline additionally bundles the Linux permission helper files and hicolor app-icon ladder, runs `ldd` on the resulting binary to flag missing libraries, and performs an offscreen smoke test (`QT_QPA_PLATFORM=offscreen`).
+Output: `dist/Moukey/`. The release pipeline additionally bundles the Linux permission helper files and hicolor app-icon ladder, runs `ldd` on the resulting binary to flag missing libraries, and performs an offscreen smoke test (`QT_QPA_PLATFORM=offscreen`).
 
 ## Desktop shortcut (Windows)
 
-Create a `Mouser.lnk` shortcut that launches via `pythonw.exe` if you want to run from source without a console window:
+Create a `Moukey.lnk` shortcut that launches via `pythonw.exe` if you want to run from source without a console window:
 
 ```powershell
-$s = (New-Object -ComObject WScript.Shell).CreateShortcut("$([Environment]::GetFolderPath('Desktop'))\Mouser.lnk")
-$s.TargetPath = "C:\path\to\mouser\.venv\Scripts\pythonw.exe"
+$s = (New-Object -ComObject WScript.Shell).CreateShortcut("$([Environment]::GetFolderPath('Desktop'))\Moukey.lnk")
+$s.TargetPath = "C:\path\to\moukey\.venv\Scripts\pythonw.exe"
 $s.Arguments = "main_qml.py"
-$s.WorkingDirectory = "C:\path\to\mouser"
-$s.IconLocation = "C:\path\to\mouser\images\logo.ico, 0"
+$s.WorkingDirectory = "C:\path\to\moukey"
+$s.IconLocation = "C:\path\to\moukey\images\logo.ico, 0"
 $s.Save()
 ```
 
@@ -360,5 +360,5 @@ $s.Save()
 - **Thread dump:** `kill -USR1 $(pgrep -f main_qml.py)` triggers `_dump_threads` and prints all stack traces to the terminal — useful for cross-thread freezes without an attached debugger.
 - **Startup timing:** `_t0`–`_t8` markers in `main_qml.py` log per-phase startup costs (env setup, PySide6 imports, core imports). Watch for regressions when adding heavy imports.
 - **HID transport override:** `--hid-backend=iokit|hidapi|auto` lets you isolate transport-specific bugs (e.g. Bolt receivers, BLE quirks).
-- **Logs:** `~/Library/Logs/Mouser/mouser.log`, `%APPDATA%\Mouser\logs\mouser.log`, or `$XDG_STATE_HOME/Mouser/logs/mouser.log`. Stdout is redirected through the rotating file handler; stderr is preserved so logging-handler errors don't recurse.
-- **Linux permissions:** [`core/linux_permissions.py`](core/linux_permissions.py) emits a `LinuxPermissionReport` describing which `/dev/hidraw*`, `/dev/input/event*`, and `/dev/uinput` nodes are blocked. Mouser surfaces this via the UI banner and the log.
+- **Logs:** `~/Library/Logs/Moukey/moukey.log`, `%APPDATA%\Moukey\logs\moukey.log`, or `$XDG_STATE_HOME/Moukey/logs/moukey.log`. Stdout is redirected through the rotating file handler; stderr is preserved so logging-handler errors don't recurse.
+- **Linux permissions:** [`core/linux_permissions.py`](core/linux_permissions.py) emits a `LinuxPermissionReport` describing which `/dev/hidraw*`, `/dev/input/event*`, and `/dev/uinput` nodes are blocked. Moukey surfaces this via the UI banner and the log.

@@ -1,7 +1,7 @@
-# Mouser — 罗技鼠标按键映射工具
+# Moukey — 罗技鼠标按键映射工具
 
 <p align="center">
-  <img src="images/logo_icon.png" width="128" alt="Mouser logo" />
+  <img src="images/logo_icon.png" width="128" alt="Moukey logo" />
 </p>
 
 中文文档｜[English README](README.md)
@@ -53,12 +53,12 @@
 
 1. 打开 [**最新 Release 页面**](https://github.com/TomBadash/Mouser/releases/latest)。
 2. 下载对应平台的 zip：
-   - **Windows** — `Mouser-Windows.zip`
-   - **macOS（Apple Silicon）** — `Mouser-macOS.zip`
-   - **macOS（Intel）** — `Mouser-macOS-intel.zip`
-   - **Linux** — `Mouser-Linux.zip`
+   - **Windows** — `Moukey-Windows.zip`
+   - **macOS（Apple Silicon）** — `Moukey-macOS.zip`
+   - **macOS（Intel）** — `Moukey-macOS-intel.zip`
+   - **Linux** — `Moukey-Linux.zip`
 3. 解压到任意目录（桌面、文档、`/Applications` 等均可）。
-4. 运行可执行文件：`Mouser.exe`、`Mouser.app` 或 `./Mouser`。
+4. 运行可执行文件：`Moukey.exe`、`Moukey.app` 或 `./Moukey`。
 
 完成。程序启动后会立即在托盘 / 菜单栏放置图标，并开始接管按键映射。
 
@@ -66,48 +66,48 @@
 
 - 设置窗口打开后会进入设备感知的 **鼠标与配置（Mouse & Profiles）** 页。
 - 系统托盘出现一个图标（Windows / Linux 在时钟旁，macOS 在菜单栏）。
-- 关闭窗口不会退出程序，Mouser 会继续在托盘运行。要完全退出，请右键托盘图标 → **Quit Mouser**。
-- Mouser 会记住语言和启动行为，下次启动自动恢复。
+- 关闭窗口不会退出程序，Moukey 会继续在托盘运行。要完全退出，请右键托盘图标 → **Quit Moukey**。
+- Moukey 会记住语言和启动行为，下次启动自动恢复。
 
 ### 首次运行注意事项
 
 - **Windows SmartScreen** 首次可能弹警告：点击 **More info** → **Run anyway**。
-- **必须退出 Logitech Options+**。两者都会争夺 HID++ 访问权，请先退出 Options+ 再启动 Mouser。
+- **必须退出 Logitech Options+**。两者都会争夺 HID++ 访问权，请先退出 Options+ 再启动 Moukey。
 - **macOS** 会请求 **辅助功能（Accessibility）** 权限，以便事件流（CGEventTap）能拦截鼠标事件。完整步骤请见 [readme_mac_osx.md](readme_mac_osx.md)。
 - **Linux** 需要读取 `/dev/hidraw*`、`/dev/input/event*` 以及写入 `/dev/uinput`。解压后请运行一次随包附带的辅助脚本：
   ```bash
-  cd /path/to/extracted/Mouser
+  cd /path/to/extracted/Moukey
   ./install-linux-permissions.sh
   ```
-  之后重新插拔鼠标并重启 Mouser。
+  之后重新插拔鼠标并重启 Moukey。
 - 配置文件自动保存到：
-  - `%APPDATA%\Mouser\config.json`（Windows）
-  - `~/Library/Application Support/Mouser/config.json`（macOS）
-  - `~/.config/Mouser/config.json`（Linux）
-- 日志按 5 × 5 MB 自动滚动，保存于 `%APPDATA%\Mouser\logs`、`~/Library/Logs/Mouser` 或 `$XDG_STATE_HOME/Mouser/logs`。
+  - `%APPDATA%\Moukey\config.json`（Windows）
+  - `~/Library/Application Support/Moukey/config.json`（macOS）
+  - `~/.config/Moukey/config.json`（Linux）
+- 日志按 5 × 5 MB 自动滚动，保存于 `%APPDATA%\Moukey\logs`、`~/Library/Logs/Moukey` 或 `$XDG_STATE_HOME/Moukey/logs`。
 
 ---
 
 ## 截图
 
 <p align="center">
-  <img src="images/Screenshot_mouse.png" alt="Mouser — 鼠标与配置页面" />
+  <img src="images/Screenshot_mouse.png" alt="Moukey — 鼠标与配置页面" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_keyboard.png" alt="Mouser — 键盘页面（Craft / MX Keys 布局）" />
+  <img src="images/Screenshot_keyboard.png" alt="Moukey — 键盘页面（Craft / MX Keys 布局）" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_1.png" alt="Mouser — 鼠标设置" />
+  <img src="images/Screenshot_settings_1.png" alt="Moukey — 鼠标设置" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_2.png" alt="Mouser — 键盘设置" />
+  <img src="images/Screenshot_settings_2.png" alt="Moukey — 键盘设置" />
 </p>
 
 <p align="center">
-  <img src="images/Screenshot_settings_3.png" alt="Mouser — 通用设置" />
+  <img src="images/Screenshot_settings_3.png" alt="Moukey — 通用设置" />
 </p>
 
 ---
@@ -133,7 +133,7 @@
 ### 跨平台
 
 - **Windows、macOS、Linux** — 各平台原生 hook（`WH_MOUSE_LL`、`CGEventTap`、`evdev` + `uinput`）。
-- **macOS Intel 与 Apple Silicon 原生构建** — 分别提供 `Mouser-macOS-intel.zip` 与 `Mouser-macOS.zip`；菜单栏 App 以 `LSUIElement` 方式运行（不在 Dock 中显示）。
+- **macOS Intel 与 Apple Silicon 原生构建** — 分别提供 `Moukey-macOS-intel.zip` 与 `Moukey-macOS.zip`；菜单栏 App 以 `LSUIElement` 方式运行（不在 Dock 中显示）。
 - **可调窗口大小** — 主窗口默认 1060 × 700，最小 920 × 620；鼠标示意图与控件会随窗口尺寸自适应排布。
 - **开机自启** — Windows 注册表 / macOS 用户级 LaunchAgent，并提供独立的 **启动时最小化（Start minimized）** 选项，可直接启动到托盘。
 - **单实例守护** — 重复启动会将已运行的窗口置前，而不会创建第二个实例。
@@ -141,7 +141,7 @@
 ### 智能连接
 
 - **蓝牙与 Logi Bolt** — 三个平台都支持两种连接方式；UI 实时显示当前连接类型（仅在确认接收器 PID 时才显示 `Logi Bolt`）。
-- **自动重连** — Mouser 监听断电 / 上电循环，无需重启即可重新绑定 HID++ 与系统鼠标 hook；每次重连（包括从睡眠唤醒）都会回放 SmartShift 设置。
+- **自动重连** — Moukey 监听断电 / 上电循环，无需重启即可重新绑定 HID++ 与系统鼠标 hook；每次重连（包括从睡眠唤醒）都会回放 SmartShift 设置。
 - **实时连接状态** — UI 显示 Connected / Not Connected 徽标、设备型号和当前布局。
 - **设备感知 UI** — MX Master 与 MX Anywhere 系列提供带可点击热区的交互示意图；其他型号使用通用回退卡片，并支持实验性的布局覆盖选择器。
 
@@ -178,7 +178,7 @@
 
 ## 键盘支持
 
-Mouser 在重映射鼠标的同时也支持罗技 HID++ 键盘。共用一个 Unifying 接收器的鼠标与键盘会被多路复用，可同时使用。
+Moukey 在重映射鼠标的同时也支持罗技 HID++ 键盘。共用一个 Unifying 接收器的鼠标与键盘会被多路复用，可同时使用。
 
 - **Logitech Craft — Crown 旋钮。** Craft 的旋钮可完全重映射：在设备视图中点击旋钮打开面板，为 **左/右旋转**、**按下**、**触摸** 以及 **按下+左/右旋转** 分配动作（默认：旋转 = 音量，按下 = 播放/暂停，按下+旋转 = 切换曲目）。
 - **棘轮 ↔ 平滑，按应用区分。** 旋钮手感（有段落感的 *棘轮* 与自由旋转的 *平滑*）在旋钮面板中设置，并 **按应用配置（Profile）分别保存**，切换应用时自动生效。
@@ -237,7 +237,7 @@ Mouser 在重映射鼠标的同时也支持罗技 HID++ 键盘。共用一个 Un
 
 ```bash
 git clone https://github.com/TomBadash/Mouser.git
-cd Mouser
+cd Moukey
 python -m venv .venv
 ```
 
@@ -259,7 +259,7 @@ build.bat                # 标准构建
 build.bat --clean        # 强制清理后重建
 ```
 
-`build.bat` 会自动安装依赖、校验 `hidapi` 是否可导入，再用 PyInstaller 打包。输出位于 `dist\Mouser\`，将整个目录打包 zip 即可分发。
+`build.bat` 会自动安装依赖、校验 `hidapi` 是否可导入，再用 PyInstaller 打包。输出位于 `dist\Moukey\`，将整个目录打包 zip 即可分发。
 
 如需源码版无控制台窗口启动，可以创建一个使用 `pythonw.exe` 的快捷方式，详见 [DEVELOPMENT.md](DEVELOPMENT.md#desktop-shortcut-windows)。
 
@@ -281,13 +281,13 @@ pip install pyinstaller
 ./build_macos_app.sh
 ```
 
-输出为 `dist/Mouser.app`。脚本优先使用 `images/AppIcon.icns`；若不存在，则从 `images/logo_icon.png` 生成 `.icns`。签名方式取决于是否设置了 `MOUSER_SIGN_IDENTITY`：
+输出为 `dist/Moukey.app`。脚本优先使用 `images/AppIcon.icns`；若不存在，则从 `images/logo_icon.png` 生成 `.icns`。签名方式取决于是否设置了 `MOUKEY_SIGN_IDENTITY`：
 
 - **未设置（默认）**：使用 `codesign --sign -` 进行 ad-hoc 签名，适合一次性本地构建，但每次重建都可能改变 bundle 的代码身份，因此 macOS 可能要求重新授予辅助功能权限。
-- **设置为代码签名身份**（可用 `security find-identity -v -p codesigning` 查看，推荐使用 SHA-1 形式）：会使用 hardened runtime 选项签名每个嵌套 `.dylib` / `.so` / `.framework`，然后用 `build_resources/Mouser.entitlements` 中的 hardened-runtime 例外权限签名外层 app。这是面向本地重复构建的开发者签名路径；稳定的 macOS 权限行为依赖相同源码、解析出的 Python 解释器、依赖版本、目标架构、签名身份、entitlements 和 timestamp 策略。
+- **设置为代码签名身份**（可用 `security find-identity -v -p codesigning` 查看，推荐使用 SHA-1 形式）：会使用 hardened runtime 选项签名每个嵌套 `.dylib` / `.so` / `.framework`，然后用 `build_resources/Moukey.entitlements` 中的 hardened-runtime 例外权限签名外层 app。这是面向本地重复构建的开发者签名路径；稳定的 macOS 权限行为依赖相同源码、解析出的 Python 解释器、依赖版本、目标架构、签名身份、entitlements 和 timestamp 策略。
 - 这**不是** notarized 发布签名流程。公开 macOS release zip 仍保持 ad-hoc 签名，直到未来单独加入 Developer ID 签名、安全 timestamp、notarization、stapling 和 Gatekeeper 校验流程。
 - 构建时使用与目标架构一致的 Python：`arm64` Python 产出 Apple Silicon Bundle，`x86_64` Python 产出 Intel Bundle。可设置 `PYINSTALLER_TARGET_ARCH=arm64|x86_64|universal2` 来覆盖。
-- 推送 tag 后，Release CI 会自动同时发布 `Mouser-macOS.zip`（Apple Silicon）与 `Mouser-macOS-intel.zip`（Intel）。
+- 推送 tag 后，Release CI 会自动同时发布 `Moukey-macOS.zip`（Apple Silicon）与 `Moukey-macOS-intel.zip`（Intel）。
 - 需要授予辅助功能（Accessibility）权限。完整步骤与平台差异请见 [readme_mac_osx.md](readme_mac_osx.md)。
 
 </details>
@@ -308,10 +308,10 @@ python main_qml.py
 # 构建便携版
 sudo apt-get install libhidapi-dev
 pip install pyinstaller
-pyinstaller Mouser-linux.spec --noconfirm
+pyinstaller Moukey-linux.spec --noconfirm
 ```
 
-辅助脚本会安装 `69-mouser-logitech.rules`、重新加载 `udev`，并尝试 `modprobe uinput`。运行成功后，请重新插拔鼠标，完全退出 Mouser，然后以普通用户方式启动 — 无需 `sudo`。在不支持 logind / `uaccess` 的发行版上，将用户加入 `input` 组是兜底方案。
+辅助脚本会安装 `69-moukey-logitech.rules`、重新加载 `udev`，并尝试 `modprobe uinput`。运行成功后，请重新插拔鼠标，完全退出 Moukey，然后以普通用户方式启动 — 无需 `sudo`。在不支持 logind / `uaccess` 的发行版上，将用户加入 `input` 组是兜底方案。
 
 `xdotool` 用于 X11 的按应用 Profile 切换；`kdotool` 提供 KDE Wayland 支持。其他 Wayland 桌面环境会回退到默认 Profile。
 
@@ -325,13 +325,13 @@ pyinstaller Mouser-linux.spec --noconfirm
 
 ## 已知限制
 
-- **Logi Bolt 首次配对** — Mouser 不提供鼠标与接收器的配对功能。如果 MX Master 3S 尚未与 Logi Bolt 接收器配对，请先使用 [Logi Web Connect](https://logiwebconnect.com/) 完成配对，再使用 Mouser 配置鼠标。已配对的设备无需重新配对。
+- **Logi Bolt 首次配对** — Moukey 不提供鼠标与接收器的配对功能。如果 MX Master 3S 尚未与 Logi Bolt 接收器配对，请先使用 [Logi Web Connect](https://logiwebconnect.com/) 完成配对，再使用 Moukey 配置鼠标。已配对的设备无需重新配对。
 - **每设备映射尚未完全分离** — 布局覆盖按设备保存，但 Profile 中的按键映射仍是全局共享的。
-- **与 Logitech Options+ 冲突** — 两者会争夺 HID++ 访问权，运行 Mouser 前请先退出 Options+。
+- **与 Logitech Options+ 冲突** — 两者会争夺 HID++ 访问权，运行 Moukey 前请先退出 Options+。
 - **滚动反转** 在 Windows 上使用合并后的事件注入，避免 LL hook 死锁；在主流应用中表现稳定，但在某些游戏或低级驱动中可能不正常。
-- **不需要管理员权限** — 但被注入的按键事件可能无法到达提权窗口或某些游戏；如有需要可以以提权方式运行 Mouser。
+- **不需要管理员权限** — 但被注入的按键事件可能无法到达提权窗口或某些游戏；如有需要可以以提权方式运行 Moukey。
 - **Linux 应用检测有限** — X11 通过 `xdotool` 工作，KDE Wayland 通过 `kdotool` 工作；GNOME / 其他 Wayland 桌面环境仍回退到默认 Profile。
-- **Linux 设备权限** — Mouser 需要访问 `/dev/hidraw*`、`/dev/input/event*` 与 `/dev/uinput`。请使用 [`install-linux-permissions.sh`](packaging/linux/install-linux-permissions.sh) 脚本配置一次，而不是长期以 root 运行。
+- **Linux 设备权限** — Moukey 需要访问 `/dev/hidraw*`、`/dev/input/event*` 与 `/dev/uinput`。请使用 [`install-linux-permissions.sh`](packaging/linux/install-linux-permissions.sh) 脚本配置一次，而不是长期以 root 运行。
 
 ---
 
@@ -364,7 +364,7 @@ pyinstaller Mouser-linux.spec --noconfirm
 
 ## 支持本项目
 
-如果 Mouser 让你避开了 Logitech Options+，欢迎赞助开发：
+如果 Moukey 让你避开了 Logitech Options+，欢迎赞助开发：
 
 <p align="center">
   <a href="https://github.com/sponsors/TomBadash">
@@ -395,4 +395,4 @@ pyinstaller Mouser-linux.spec --noconfirm
 
 本项目使用 [MIT 协议](LICENSE)。
 
-**Mouser** 与罗技（Logitech）无隶属关系亦未获其背书。“Logitech”“MX Master”“Options+” 为 Logitech International S.A. 的商标。
+**Moukey** 与罗技（Logitech）无隶属关系亦未获其背书。“Logitech”“MX Master”“Options+” 为 Logitech International S.A. 的商标。

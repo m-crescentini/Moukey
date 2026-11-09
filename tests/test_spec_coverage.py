@@ -15,9 +15,9 @@ import unittest
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SPEC_FILES = {
-    "windows": "Mouser.spec",
-    "macos": "Mouser-mac.spec",
-    "linux": "Mouser-linux.spec",
+    "windows": "Moukey.spec",
+    "macos": "Moukey-mac.spec",
+    "linux": "Moukey-linux.spec",
 }
 
 # App code that ships inside the bundle. scripts/ and tools/ are build/dev-side.
@@ -224,7 +224,7 @@ class SpecStructureTests(unittest.TestCase):
                 self.assertIn(
                     "BUILD_INFO_DATA",
                     sources,
-                    f"{filename}: mouser_build_info.json (core/version.py "
+                    f"{filename}: moukey_build_info.json (core/version.py "
                     f"reads it from the bundle root) is not in datas",
                 )
 
@@ -240,7 +240,7 @@ class SpecStructureTests(unittest.TestCase):
             with self.subTest(file=rel):
                 self.assertTrue(
                     covered,
-                    f"{rel} exists but Mouser-linux.spec does not bundle it "
+                    f"{rel} exists but Moukey-linux.spec does not bundle it "
                     f"(startup.py resolves packaging assets from the bundle)",
                 )
 
@@ -298,7 +298,7 @@ class QmlCoverageTests(unittest.TestCase):
             unmapped,
             f"New QML import(s) {unmapped} are not in the coverage mapping. "
             f"Add them to QML_IMPORT_TO_QT_LIBS / QML_IMPORT_TO_QML_DIRS "
-            f"here AND to the keep-lists in Mouser.spec and "
+            f"here AND to the keep-lists in Moukey.spec and "
             f"build_support.py so packaged builds ship them.",
         )
 
@@ -316,7 +316,7 @@ class QmlCoverageTests(unittest.TestCase):
 
         missing = self._required_libs() - qt_keep
         self.assertFalse(
-            missing, f"Mouser.spec _qt_keep missing: {sorted(missing)}"
+            missing, f"Moukey.spec _qt_keep missing: {sorted(missing)}"
         )
         for qml_import in self.qml_imports:
             top, sub = QML_IMPORT_TO_QML_DIRS.get(qml_import, (None, None))
@@ -354,7 +354,7 @@ class QmlCoverageTests(unittest.TestCase):
             with self.subTest(lib=lib):
                 self.assertFalse(
                     clashing,
-                    f"Mouser-mac.spec filter pattern(s) {clashing} would "
+                    f"Moukey-mac.spec filter pattern(s) {clashing} would "
                     f"drop required library {lib}",
                 )
 

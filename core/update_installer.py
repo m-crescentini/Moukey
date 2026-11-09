@@ -23,13 +23,13 @@ import zipfile
 from core.version import APP_VERSION
 
 
-APP_ID = "io.github.tombadash.mouser"
+APP_ID = "io.github.tombadash.moukey"
 STABLE_CHANNEL = "stable"
 MANIFEST_SCHEMA_VERSION = 1
-DEFAULT_MANIFEST_NAME = "mouser-v{version}-update.json"
+DEFAULT_MANIFEST_NAME = "moukey-v{version}-update.json"
 DEFAULT_DOWNLOAD_TIMEOUT_SECONDS = 120.0
 MAX_ARCHIVE_UNCOMPRESSED_BYTES = 750 * 1024 * 1024
-_UPDATE_MANIFEST_URL_ENV = "MOUSER_UPDATE_MANIFEST_URL"
+_UPDATE_MANIFEST_URL_ENV = "MOUKEY_UPDATE_MANIFEST_URL"
 _WINDOWS_SYNCHRONIZE = 0x00100000
 _WINDOWS_WAIT_OBJECT_0 = 0x00000000
 _WINDOWS_WAIT_TIMEOUT = 0x00000102
@@ -114,7 +114,7 @@ class WindowsUpdatePlan:
     result_marker: str
     target_version: str = ""
     target_build_number: int = 0
-    executable_name: str = "Mouser.exe"
+    executable_name: str = "Moukey.exe"
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -141,7 +141,7 @@ class WindowsUpdatePlan:
                 result_marker=str(data["result_marker"]),
                 target_version=str(data.get("target_version") or ""),
                 target_build_number=int(data.get("target_build_number") or 0),
-                executable_name=str(data.get("executable_name") or "Mouser.exe"),
+                executable_name=str(data.get("executable_name") or "Moukey.exe"),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise UpdateInstallError("invalid_plan", "Update plan is incomplete.") from exc
@@ -321,7 +321,7 @@ def download_to_file(
         raise UpdateInstallError("cancelled", "Update cancelled.")
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": f"Mouser/{APP_VERSION}"},
+        headers={"User-Agent": f"Moukey/{APP_VERSION}"},
     )
     target_path = Path(target)
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -358,7 +358,7 @@ def download_to_file(
 def fetch_json(url: str, *, timeout: float = 10.0):
     request = urllib.request.Request(
         url,
-        headers={"Accept": "application/json", "User-Agent": f"Mouser/{APP_VERSION}"},
+        headers={"Accept": "application/json", "User-Agent": f"Moukey/{APP_VERSION}"},
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8-sig"))
@@ -452,8 +452,8 @@ def validate_zip_archive(
             raise UpdateInstallError("invalid_archive_root", "Update archive must contain one app folder.")
         root = next(iter(roots))
         if requirements.require_windows_app:
-            if f"{root}/Mouser.exe" not in files:
-                raise UpdateInstallError("missing_entrypoint", "Update archive does not contain Mouser.exe.")
+            if f"{root}/Moukey.exe" not in files:
+                raise UpdateInstallError("missing_entrypoint", "Update archive does not contain Moukey.exe.")
             if not any(path.startswith(f"{root}/_internal/") for path in files):
                 raise UpdateInstallError("missing_runtime", "Update archive does not contain the runtime folder.")
         return root
@@ -544,14 +544,14 @@ def same_volume_windows_stage_dir(
 def _probe_directory_writable(directory: Path) -> bool:
     try:
         handle, marker = tempfile.mkstemp(
-            prefix=".mouser-update-write-test-",
+            prefix=".moukey-update-write-test-",
             dir=str(directory),
         )
     except OSError:
         return False
     try:
         with os.fdopen(handle, "wb") as marker_file:
-            marker_file.write(b"mouser")
+            marker_file.write(b"moukey")
             marker_file.flush()
             os.fsync(marker_file.fileno())
     except OSError:
@@ -583,14 +583,14 @@ def locate_runtime(
     is_frozen = bool(getattr(sys, "frozen", False) if frozen is None else frozen)
     if app_data_dir is None and (sys_platform or sys.platform).startswith("win"):
         base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-        app_data_dir = Path(base) / "Mouser" / "updates"
-    data_dir = Path(app_data_dir or Path.home() / ".mouser" / "updates").resolve()
+        app_data_dir = Path(base) / "Moukey" / "updates"
+    data_dir = Path(app_data_dir or Path.home() / ".moukey" / "updates").resolve()
     key = platform_key(system)
     if not is_frozen:
         return RuntimeLocation(exe, exe.parent, data_dir, False, key, False, "source run")
     if system.startswith("win"):
         root = exe.parent
-        if not (root / "Mouser.exe").exists() or not (root / "_internal").exists():
+        if not (root / "Moukey.exe").exists() or not (root / "_internal").exists():
             return RuntimeLocation(exe, root, data_dir, True, key, False, "unsupported install layout")
         if not _probe_directory_writable(root.parent):
             return RuntimeLocation(exe, root, data_dir, True, key, False, "install path not writable")
@@ -619,7 +619,7 @@ def plan_install_for_platform(
             runtime.platform_key,
             False,
             "manual_fallback",
-            f"A new Mouser release is available. Install manually on {system}.",
+            f"A new Moukey release is available. Install manually on {system}.",
             asset,
             staged,
         )
@@ -628,7 +628,7 @@ def plan_install_for_platform(
             runtime.platform_key,
             False,
             "manual_fallback",
-            "Mouser cannot safely update this install automatically. Please install manually from the release page.",
+            "Moukey cannot safely update this install automatically. Please install manually from the release page.",
             asset,
             staged,
         )
@@ -636,7 +636,7 @@ def plan_install_for_platform(
         runtime.platform_key,
         True,
         "ready_to_install",
-        "Mouser is ready to install the verified update.",
+        "Moukey is ready to install the verified update.",
         asset,
         staged,
     )
@@ -697,11 +697,11 @@ def validate_windows_update_plan(
 
     if plan.current_pid <= 0:
         reject()
-    if plan.executable_name != "Mouser.exe":
+    if plan.executable_name != "Moukey.exe":
         reject()
     if not install_root.is_dir():
         reject()
-    if not (install_root / "Mouser.exe").is_file():
+    if not (install_root / "Moukey.exe").is_file():
         reject()
     if not (install_root / "_internal").is_dir():
         reject()
@@ -709,7 +709,7 @@ def validate_windows_update_plan(
         reject()
     if staged_root.name != install_root.name:
         reject()
-    if not (staged_root / "Mouser.exe").is_file():
+    if not (staged_root / "Moukey.exe").is_file():
         reject()
     if not (staged_root / "_internal").is_dir():
         reject()
@@ -746,7 +746,7 @@ def stage_windows_update_helper(
     if not runtime_dir.is_dir():
         raise UpdateInstallError("missing_helper_runtime", "Update helper runtime is missing.")
     target_dir = Path(helper_dir).resolve()
-    target_root = target_dir / "MouserUpdateHelper"
+    target_root = target_dir / "MoukeyUpdateHelper"
     try:
         target_root.relative_to(source.parent)
     except ValueError:
@@ -790,7 +790,7 @@ def launch_windows_update_helper(
     env = dict(os.environ)
     env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
     (runner or ProcessRunner()).popen(
-        [exe, "--mouser-apply-update", str(plan_path)],
+        [exe, "--moukey-apply-update", str(plan_path)],
         cwd=str(Path(exe).resolve().parent),
         env=env,
     )
@@ -879,7 +879,7 @@ def _apply_validated_windows_update_plan(
                 "failed",
                 plan.target_version,
                 plan.target_build_number,
-                "Mouser did not exit",
+                "Moukey did not exit",
             )
             return 2
         time.sleep(0.2)
@@ -1068,7 +1068,7 @@ def prepare_downloaded_asset(
     cancel_event=None,
     progress_callback=None,
 ) -> Path:
-    root = Path(download_dir or tempfile.mkdtemp(prefix="mouser-update-download-"))
+    root = Path(download_dir or tempfile.mkdtemp(prefix="moukey-update-download-"))
     target = root / asset.name
     download_to_file(
         asset.url,

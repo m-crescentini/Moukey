@@ -15,7 +15,7 @@ def normalize_language_preference(value: object) -> str:
 
 
 def language_for_system_locale(locale_name: str | None) -> str:
-    """Map a system locale name to one of Mouser's translated languages."""
+    """Map a system locale name to one of Moukey's translated languages."""
     normalized = str(locale_name or "").replace("-", "_")
     parts = [part for part in normalized.split("_") if part]
     if not parts or parts[0].casefold() != "zh":

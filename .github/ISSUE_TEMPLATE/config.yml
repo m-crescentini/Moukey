@@ -3,5 +3,5 @@ contact_links:
   - name: Contributing a new device
     url: https://github.com/TomBadash/Mouser/blob/master/CONTRIBUTING_DEVICES.md
     about: >
-      Step-by-step guide for adding your Logitech mouse to Mouser, including
+      Step-by-step guide for adding your Logitech mouse to Moukey, including
       how to get and submit a device info dump.

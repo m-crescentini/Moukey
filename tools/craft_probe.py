@@ -1,7 +1,7 @@
 """
 craft_probe.py — full HID++ feature/control discovery probe.
 
-Mouser's built-in "Copy device info" dump only reports the handful of HID++
+Moukey's built-in "Copy device info" dump only reports the handful of HID++
 features it already knows how to drive (REPROG_V4, DPI, Smart Shift, battery,
 wheels). To add support for new control surfaces — notably the Logitech Craft
 *Crown* (HID++ feature 0x4540) and any divertable top-row keys — we first need
@@ -35,7 +35,7 @@ try:
 except Exception:
     pass
 
-# Reuse Mouser's HID enumeration, parser, and protocol constants so this probe
+# Reuse Moukey's HID enumeration, parser, and protocol constants so this probe
 # stays faithful to how the app actually talks to the device.
 from core.hid_gesture import (  # noqa: E402
     HIDAPI_OK,

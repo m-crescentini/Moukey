@@ -111,7 +111,7 @@ class WindowsSuperKeyGuard(SuperKeyGuard):
             self._super_held = False
             thread = threading.Thread(
                 target=self._run,
-                name="MouserKeyCaptureHook",
+                name="MoukeyKeyCaptureHook",
                 daemon=True,
             )
             self._thread = thread

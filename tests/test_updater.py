@@ -47,7 +47,7 @@ class UpdaterTests(unittest.TestCase):
         payload = {
             "tag_name": "v3.7.1",
             "html_url": "https://github.com/TomBadash/Mouser/releases/tag/v3.7.1",
-            "name": "Mouser v3.7.1",
+            "name": "Moukey v3.7.1",
             "published_at": "2026-05-13T00:00:00Z",
         }
         with patch("urllib.request.urlopen", return_value=_FakeResponse(payload)) as mocked:
@@ -58,13 +58,13 @@ class UpdaterTests(unittest.TestCase):
             LatestRelease(
                 tag_name="v3.7.1",
                 html_url="https://github.com/TomBadash/Mouser/releases/tag/v3.7.1",
-                name="Mouser v3.7.1",
+                name="Moukey v3.7.1",
                 published_at="2026-05-13T00:00:00Z",
             ),
         )
         request = mocked.call_args.args[0]
         self.assertIn("TomBadash/Mouser", request.full_url)
-        self.assertEqual(request.get_header("User-agent"), f"Mouser/{APP_VERSION}")
+        self.assertEqual(request.get_header("User-agent"), f"Moukey/{APP_VERSION}")
 
     def test_check_latest_release_accepts_utf8_bom_response(self):
         payload = (
@@ -86,7 +86,7 @@ class UpdaterTests(unittest.TestCase):
         with (
             patch.dict(
                 "os.environ",
-                {"MOUSER_UPDATE_LATEST_RELEASE_URL": "http://127.0.0.1:8765/release.json"},
+                {"MOUKEY_UPDATE_LATEST_RELEASE_URL": "http://127.0.0.1:8765/release.json"},
             ),
             patch("urllib.request.urlopen", return_value=_FakeResponse(payload)) as mocked,
         ):

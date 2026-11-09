@@ -216,7 +216,7 @@ def _open_url(url: str) -> bool:
 
 
 def _update_install_enabled() -> bool:
-    value = os.environ.get("MOUSER_ENABLE_UPDATE_INSTALL", "")
+    value = os.environ.get("MOUKEY_ENABLE_UPDATE_INSTALL", "")
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
@@ -932,7 +932,7 @@ class Backend(QObject):
         return bool(self._cfg.get("settings", {}).get("backlight_follow_theme", False))
 
     def _resolved_backlight(self):
-        """Return (enabled, brightness) for the current theme, or None when Mouser
+        """Return (enabled, brightness) for the current theme, or None when Moukey
         should not manage the backlight (theme-following disabled). Opt-in only.
 
         This Craft can't set brightness over HID++, only on/off, so theme-follow
@@ -1529,7 +1529,7 @@ class Backend(QObject):
         thread = threading.Thread(
             target=self._runUpdateCheck,
             args=(bool(manual), self._update_state),
-            name="MouserUpdateCheck",
+            name="MoukeyUpdateCheck",
             daemon=True,
         )
         thread.start()
@@ -1579,7 +1579,7 @@ class Backend(QObject):
         self._pending_update_plan_path = None
         self.updateInstallChanged.emit()
         self.updateAvailable.emit(self._latest_update_version, self._latest_update_url)
-        self.statusMessage.emit(f"Mouser {self._latest_update_version} is available")
+        self.statusMessage.emit(f"Moukey {self._latest_update_version} is available")
 
     @Slot(bool, bool, object)
     def _handleUpdateCheckFinished(self, manual, reachable, state_data):
@@ -1587,7 +1587,7 @@ class Backend(QObject):
         self._persistUpdateCheckState(state_data)
         if manual:
             if reachable:
-                self.statusMessage.emit("Mouser is up to date")
+                self.statusMessage.emit("Moukey is up to date")
             else:
                 self.statusMessage.emit("Could not check for updates")
 
@@ -1904,7 +1904,7 @@ class Backend(QObject):
         self._setUpdateInstallState("checking")
         thread = threading.Thread(
             target=self._runPrepareLatestUpdate,
-            name="MouserPrepareUpdate",
+            name="MoukeyPrepareUpdate",
             daemon=True,
         )
         thread.start()
@@ -1981,7 +1981,7 @@ class Backend(QObject):
             self.settingsChanged.emit()
             if rollback_error is not None:
                 self.statusMessage.emit(
-                    "Start-at-login state is inconsistent; please restart Mouser to recover."
+                    "Start-at-login state is inconsistent; please restart Moukey to recover."
                 )
             else:
                 self.statusMessage.emit(f"Failed to save login item setting: {exc}")
@@ -2764,7 +2764,7 @@ class Backend(QObject):
         """Runs on Qt main thread.
 
         A device-reported DPI is authoritative for "what the hardware is
-        currently set to" -- the user expects Mouser to keep showing the
+        currently set to" -- the user expects Moukey to keep showing the
         same value across restarts rather than reverting to a stale
         preference whenever the engine reads the device. Clamp the
         incoming value, persist it, and keep the engine's cached config

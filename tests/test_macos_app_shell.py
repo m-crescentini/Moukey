@@ -15,10 +15,10 @@ except Exception:  # pragma: no cover - env without PySide6 / project deps
 class MacOSLauncherPathTests(unittest.TestCase):
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_named_executable_uses_venv_shim_directory(self):
-        executable = "/tmp/Mouser/.venv/bin/python"
+        executable = "/tmp/Moukey/.venv/bin/python"
 
         def fake_isfile(path):
-            return path in {executable, "/tmp/Mouser/.venv/pyvenv.cfg"}
+            return path in {executable, "/tmp/Moukey/.venv/pyvenv.cfg"}
 
         with (
             patch.object(main_qml.sys, "executable", executable),
@@ -26,7 +26,7 @@ class MacOSLauncherPathTests(unittest.TestCase):
         ):
             self.assertEqual(
                 main_qml._macos_named_executable_path(),
-                "/tmp/Mouser/.venv/bin/Mouser",
+                "/tmp/Moukey/.venv/bin/Moukey",
             )
 
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
@@ -34,11 +34,11 @@ class MacOSLauncherPathTests(unittest.TestCase):
         with (
             patch.object(main_qml.sys, "executable", "/usr/bin/python3"),
             patch.object(main_qml.os.path, "isfile", return_value=False),
-            patch.object(main_qml, "ROOT", "/tmp/Mouser"),
+            patch.object(main_qml, "ROOT", "/tmp/Moukey"),
         ):
             self.assertEqual(
                 main_qml._macos_named_executable_path(),
-                "/tmp/Mouser/build/macos/bin/Mouser",
+                "/tmp/Moukey/build/macos/bin/Moukey",
             )
 
     def test_relaunch_noops_off_macos(self):
@@ -46,17 +46,17 @@ class MacOSLauncherPathTests(unittest.TestCase):
             patch.object(main_qml.sys, "platform", "linux"),
             patch.object(main_qml.os, "execv") as execv,
         ):
-            main_qml._maybe_relaunch_with_mouser_process_name()
+            main_qml._maybe_relaunch_with_moukey_process_name()
         execv.assert_not_called()
 
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_relaunch_stages_symlink_and_execs_named_path(self):
-        executable = "/tmp/Mouser/.venv/bin/python"
-        target = "/tmp/Mouser/.venv/bin/Mouser"
+        executable = "/tmp/Moukey/.venv/bin/python"
+        target = "/tmp/Moukey/.venv/bin/Moukey"
         staging = f"{target}.staging.1234"
 
         def fake_isfile(path):
-            return path in {executable, "/tmp/Mouser/.venv/pyvenv.cfg"}
+            return path in {executable, "/tmp/Moukey/.venv/pyvenv.cfg"}
 
         with (
             patch.object(main_qml.sys, "platform", "darwin"),
@@ -70,9 +70,9 @@ class MacOSLauncherPathTests(unittest.TestCase):
             patch.object(main_qml.os, "execv") as execv,
             patch.dict(main_qml.os.environ, {}, clear=True),
         ):
-            main_qml._maybe_relaunch_with_mouser_process_name()
+            main_qml._maybe_relaunch_with_moukey_process_name()
 
-        makedirs.assert_called_once_with("/tmp/Mouser/.venv/bin", exist_ok=True)
+        makedirs.assert_called_once_with("/tmp/Moukey/.venv/bin", exist_ok=True)
         symlink.assert_called_once_with(executable, staging)
         replace.assert_called_once_with(staging, target)
         execv.assert_called_once_with(target, [target, "main_qml.py", "--show-window"])
@@ -83,26 +83,26 @@ class AppIdentityTests(unittest.TestCase):
     def test_app_icon_uses_linux_runtime_asset(self):
         with (
             patch.object(main_qml.sys, "platform", "linux"),
-            patch.object(main_qml, "linux_runtime_icon_path", return_value="/tmp/Mouser/linux/icons/hicolor/256x256/apps/io.github.tombadash.mouser.png"),
+            patch.object(main_qml, "linux_runtime_icon_path", return_value="/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.tombadash.moukey.png"),
             patch.object(main_qml.os.path, "isfile", return_value=True),
             patch.object(main_qml, "QIcon", side_effect=lambda path: path),
         ):
             self.assertEqual(
                 main_qml._app_icon(),
-                "/tmp/Mouser/linux/icons/hicolor/256x256/apps/io.github.tombadash.mouser.png",
+                "/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.tombadash.moukey.png",
             )
 
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")
     def test_app_icon_uses_ico_on_windows(self):
         with (
             patch.object(main_qml.sys, "platform", "win32"),
-            patch.object(main_qml, "ROOT", "/tmp/Mouser"),
+            patch.object(main_qml, "ROOT", "/tmp/Moukey"),
             patch.object(main_qml.os.path, "isfile", return_value=True),
             patch.object(main_qml, "QIcon", side_effect=lambda path: path),
         ):
             self.assertEqual(
                 main_qml._app_icon(),
-                "/tmp/Mouser/images/logo.ico",
+                "/tmp/Moukey/images/logo.ico",
             )
 
     def test_windows_app_user_model_id_is_set_on_windows(self):
@@ -568,7 +568,7 @@ class MacOSQuitAndAccessibilityTests(unittest.TestCase):
 
         callback()
         tray.showMessage.assert_called_once_with(
-            "Mouser",
+            "Moukey",
             "translated:tray.tray_message",
             main_qml.QSystemTrayIcon.MessageIcon.Information,
             5000,

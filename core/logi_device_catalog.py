@@ -1,7 +1,7 @@
 """
 Small Logitech device catalog entries.
 
-These records are maintained device by device after the Mouser UI has been
+These records are maintained device by device after the Moukey UI has been
 checked locally. We keep the catalog small so supported devices stay easy to
 review and maintain.
 """
@@ -88,7 +88,7 @@ CROWN_BUTTONS = (
 # and the auto-classifier in logi_devices.classify_device_kind). Each is a
 # divertable control; "cid" is the HID++ control id, "label" is the default
 # printed function. Default mapping is "none" (the key keeps its native function
-# until the user remaps it, at which point Mouser diverts just that control).
+# until the user remaps it, at which point Moukey diverts just that control).
 # Captured with tools/craft_probe.py --keys; see the craft-hidpp-protocol notes.
 # Easy-Switch (host) and arrow controls are intentionally omitted so host
 # switching and navigation stay native.

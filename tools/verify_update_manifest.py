@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify Mouser update metadata for the selected platform."""
+"""Verify Moukey update metadata for the selected platform."""
 
 from __future__ import annotations
 

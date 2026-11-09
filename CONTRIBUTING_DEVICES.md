@@ -1,7 +1,7 @@
-# Contributing a New Device to Mouser
+# Contributing a New Device to Moukey
 
-Mouser is built around the MX Master 3S because that is the only mouse the
-maintainer owns.  If you have a different Logitech HID++ mouse and want Mouser
+Moukey is built around the MX Master 3S because that is the only mouse the
+maintainer owns.  If you have a different Logitech HID++ mouse and want Moukey
 to support it, this guide walks you through the process.
 
 ---
@@ -9,11 +9,11 @@ to support it, this guide walks you through the process.
 ## 1. Get a discovery dump from your mouse
 
 1. Connect your Logitech mouse via Bluetooth or the Bolt receiver.
-2. Open Mouser and go to the **Mouse** page.
+2. Open Moukey and go to the **Mouse** page.
 3. Enable **Debug mode** in the Settings page.
 4. In the debug panel that appears, click **Copy device info**.
 5. The JSON blob on your clipboard describes every HID++ feature and
-   reprogrammable control Mouser discovered on your device.
+   reprogrammable control Moukey discovered on your device.
 
 Paste this JSON into your GitHub issue  it is the single most useful piece of information for adding support.
 
@@ -26,7 +26,7 @@ Paste this JSON into your GitHub issue  it is the single most useful piece of in
 | `reprog_controls` | Every button/control the device exposes via REPROG_V4 |
 | `discovered_features` | Which HID++ features the device supports (DPI, SmartShift, battery, etc.) |
 | `gesture_candidates` | CIDs that look like they can be diverted as gesture buttons |
-| `supported_buttons` | The button set Mouser currently uses for this device |
+| `supported_buttons` | The button set Moukey currently uses for this device |
 
 ---
 
@@ -47,7 +47,7 @@ Look at the `reprog_controls` array.  Each entry has a `cid` (Control ID) and
 | `0x00D7` | Virtual gesture button |
 
 Not all CIDs are divertable.  Check the `flags` field -- if bit `0x0020` is
-set, the control can be intercepted by Mouser.
+set, the control can be intercepted by Moukey.
 Directional gesture mappings also require RawXY support (`0x0100` or
 `0x0200`) and a successful RawXY divert during connection.
 
@@ -58,7 +58,7 @@ Directional gesture mappings also require RawXY support (`0x0100` or
 ### a) Add a device catalog entry
 
 For exact device support, edit `core/logi_device_catalog.py` first. This file
-holds Mouser's community-maintained per-device Logitech entries, including the
+holds Moukey's community-maintained per-device Logitech entries, including the
 device image and hotspot coordinates used by the UI.
 
 Add a new dict to `LOGI_DEVICE_SPECS`:
@@ -86,10 +86,10 @@ Pick the right button tuple for `supported_buttons`:
 - `GENERIC_BUTTONS` -- middle, back, forward (safe default)
 - Or define a new tuple if your mouse has a unique button set.
 
-`supported_buttons` is a static fallback.  When Mouser connects through HID++
+`supported_buttons` is a static fallback.  When Moukey connects through HID++
 and discovers `REPROG_V4` controls, it may narrow HID++-gated buttons such as
 gesture, Smart Shift / mode shift, and DPI switch based on the runtime control
-table.  Unknown CIDs are intentionally not exposed until Mouser has code that
+table.  Unknown CIDs are intentionally not exposed until Moukey has code that
 knows how to handle them.  Horizontal scroll remains catalog-driven because
 some devices implement it as OS events or side-button + wheel behavior instead
 of a standalone reprogrammable control.
@@ -182,10 +182,10 @@ someone else can wire up the layout later.
 
 ## FAQ
 
-**Q: My mouse connects but Mouser says "Logitech PID 0xXXXX".**
+**Q: My mouse connects but Moukey says "Logitech PID 0xXXXX".**
 A: Your PID is not in the catalog yet.  Follow step 3a to add it.
 
-**Q: My mouse has a button Mouser does not know about.**
+**Q: My mouse has a button Moukey does not know about.**
 A: Check the CID in your dump against the REPROG_V4 flags.  If it is
 divertable, it can potentially be supported.  Open an issue describing the
 button and its CID.
@@ -194,6 +194,6 @@ button and its CID.
 A: That is fine!  Skip step 3b entirely -- the fallback button list still lets
 users configure every button.  Someone else can contribute the image later.
 
-**Q: Mouser works on my mouse but a button does not respond.**
+**Q: Moukey works on my mouse but a button does not respond.**
 A: Some CIDs require specific divert flags.  Share your discovery dump in an
 issue so we can investigate.

@@ -424,9 +424,9 @@ class DeviceHook(BaseDeviceHook):
             # this host, the WH_MOUSE_LL hook must be a complete pass-through.
             # The hook sees events from every input device, so without this
             # guard a trackpad scroll or generic USB mouse's xbutton click
-            # would still run through Mouser's remap pipeline -- the exact
+            # would still run through Moukey's remap pipeline -- the exact
             # failure mode users hit when their KVM switches the Logitech
-            # to another machine while Mouser keeps running here.
+            # to another machine while Moukey keeps running here.
             if not self._should_intercept_events():
                 return CallNextHookEx(self._hook, nCode, wParam, lParam)
 
@@ -713,7 +713,7 @@ class DeviceHook(BaseDeviceHook):
 
     def _setup_raw_input(self):
         instance = GetModuleHandleW(None)
-        class_name = f"MouserRawInput_{id(self)}"
+        class_name = f"MoukeyRawInput_{id(self)}"
         self._ri_wndproc_ref = WNDPROC_TYPE(self._ri_wndproc)
 
         window_class = WNDCLASSEXW()
@@ -726,7 +726,7 @@ class DeviceHook(BaseDeviceHook):
         self._ri_hwnd = CreateWindowExW(
             0,
             class_name,
-            "Mouser RI",
+            "Moukey RI",
             0,
             0,
             0,
@@ -1001,7 +1001,7 @@ class DeviceHook(BaseDeviceHook):
     # stays non-NULL and simply never fires again. Resume is the classic
     # trigger — the process is still being scheduled back in while a burst of
     # input arrives — but it also happens under load, which is what leaves
-    # users with a dead Mouser and no explanation (#257 / #246).
+    # users with a dead Moukey and no explanation (#257 / #246).
     #
     # There is no API to ask whether a hook is still installed, so we compare
     # it against raw input: same events, independent delivery path, already

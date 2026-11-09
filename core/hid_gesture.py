@@ -5,7 +5,7 @@ Many Logitech mice expose their gesture button and DPI/battery controls only
 through the HID++ vendor channel instead of standard OS mouse events. This
 module opens the Logitech HID interface, discovers REPROG_CONTROLS_V4 and
 related features, diverts the best gesture candidate it can find, and reports
-press/release or RawXY movement back to Mouser.
+press/release or RawXY movement back to Moukey.
 
 Requires:  pip install hidapi
 Falls back gracefully if the package or device are unavailable.
@@ -81,17 +81,17 @@ _CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 def _cache_dir() -> str:
     if sys.platform == "darwin":
-        base = os.path.expanduser("~/Library/Application Support/Mouser")
+        base = os.path.expanduser("~/Library/Application Support/Moukey")
     elif sys.platform.startswith("linux"):
         base = os.environ.get(
             "XDG_CONFIG_HOME",
             os.path.expanduser("~/.config"),
         )
-        base = os.path.join(base, "Mouser")
+        base = os.path.join(base, "Moukey")
     else:
         base = os.path.join(
             os.environ.get("APPDATA", os.path.expanduser("~")),
-            "Mouser",
+            "Moukey",
         )
     return base
 
@@ -210,7 +210,7 @@ def _candidate_matches_cache(info, cached_candidate) -> bool:
 
 
 def _atexit_stop_listeners():
-    """Best-effort undivert before interpreter exit so a Mouser crash or
+    """Best-effort undivert before interpreter exit so a Moukey crash or
     SIGTERM does not leave the device stuck in HID++ divert mode.
 
     Failures are logged but otherwise tolerated -- atexit runs during
@@ -1121,7 +1121,7 @@ class HidGestureListener:
         self._on_disconnect = on_disconnect
         # Fired when the device re-links after power-saving sleep *without*
         # the HID handle ever dropping, so no connect/disconnect pair is seen.
-        # Volatile firmware state Mouser owns -- the 0x2121 / 0x2150 wheel
+        # Volatile firmware state Moukey owns -- the 0x2121 / 0x2150 wheel
         # invert bits -- does not survive that power cycle, so the listener
         # cannot stay silent about it (issue: inverted horizontal scroll
         # stops working after the mouse has been idle for a long time).
@@ -1269,7 +1269,7 @@ class HidGestureListener:
         # pending/result slot. The event signals listener-loop completion.
         self._hires_wheel_idx = None
         self._hires_wheel_multiplier = None
-        # 0x2121 wheel mode as found at connect, before Mouser touches it.
+        # 0x2121 wheel mode as found at connect, before Moukey touches it.
         # The resolution bit is owned by whoever set it up (on Linux the
         # in-kernel hid-logitech-hidpp driver enables hi-res at probe and
         # then divides wheel deltas by a latched multiplier), so we restore
@@ -2872,7 +2872,7 @@ class HidGestureListener:
             self._finish_pending_smart_shift(None)
 
     # 0x2121 setWheelMode (fn 2) bitfield: bit0=target (0=HID, 1=divert),
-    # bit1=resolution (0=low, 1=hi-res), bit2=invert. Mouser drives *only*
+    # bit1=resolution (0=low, 1=hi-res), bit2=invert. Moukey drives *only*
     # bit2 and preserves bits 0-1 as found: the resolution bit belongs to
     # whoever configured the device (on Linux the kernel's
     # hid-logitech-hidpp enables hi-res at probe and divides deltas by a
@@ -2938,7 +2938,7 @@ class HidGestureListener:
             # success only when there is nothing to do, otherwise let the
             # engine fall back to OS-layer inversion.
             return not invert
-        # bit0 (target): always cleared. Mouser wants native HID reporting,
+        # bit0 (target): always cleared. Moukey wants native HID reporting,
         # and clearing it also recovers a device left diverted by a crashed
         # session.
         # bit2 (invert): the only bit we actually drive.

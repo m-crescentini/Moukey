@@ -109,7 +109,7 @@ class BaseDeviceHook:
         self._liveness_stop = None
 
     # ── Liveness watchdog ─────────────────────────────────────────────
-    # Both halves of Mouser can die without saying so: the OS-level hook
+    # Both halves of Moukey can die without saying so: the OS-level hook
     # (Windows silently drops a low-level hook whose proc overruns
     # LowLevelHooksTimeout) and the HID++ handle (a suspend/resume cycle can
     # leave it open against an orphaned device, where reads never fail and
@@ -476,14 +476,14 @@ class BaseDeviceHook:
         """True only when the platform hook should block, remap, or dispatch
         OS-level mouse events to the engine.
 
-        Mouser exists to remap a Logitech mouse's buttons. The global event
+        Moukey exists to remap a Logitech mouse's buttons. The global event
         taps on macOS (CGEventTap) and Windows (WH_MOUSE_LL) see events
         from every input device the OS knows about -- when no Logitech is
         currently bound to this host (KVM switched to another machine,
         the device is mid-reconnect after sleep, or the user simply has
         not plugged one in) those hooks must stay completely out of the
         way, otherwise xbutton clicks and scroll events from a trackpad
-        or generic USB mouse get swallowed and routed through Mouser's
+        or generic USB mouse get swallowed and routed through Moukey's
         remap pipeline.
 
         Linux's evdev hook only attaches once a Logitech source device

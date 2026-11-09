@@ -38,7 +38,7 @@ class ClassifyKeyEventTests(unittest.TestCase):
         )
 
     def test_injected_windows_key_is_never_swallowed(self):
-        # Shortcuts Mouser itself sends must not be eaten by the guard.
+        # Shortcuts Moukey itself sends must not be eaten by the guard.
         self.assertEqual(
             key_capture.classify_key_event(
                 key_capture.VK_LWIN,

@@ -1,10 +1,10 @@
-M720 control schematic — Mouser contributors, 2026
+M720 control schematic — Moukey contributors, 2026
 
 Original project-authored vector artwork. Canonical editable source:
 mouse.svg in this directory.
 
 Source permalink:
-https://github.com/Las-re/Mouser/blob/add-m720-triathlon-support/images/logitech-mice/m720_triathlon/mouse.svg
+https://github.com/Las-re/Moukey/blob/add-m720-triathlon-support/images/logitech-mice/m720_triathlon/mouse.svg
 
 Licensed under the repository MIT License:
 https://github.com/TomBadash/Mouser/blob/master/LICENSE

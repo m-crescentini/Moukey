@@ -18,9 +18,9 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  MOUSER_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.tag || '' }}
-  MOUSER_GIT_COMMIT: ${{ github.sha }}
-  MOUSER_GIT_DIRTY: "false"
+  MOUKEY_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.tag || '' }}
+  MOUKEY_GIT_COMMIT: ${{ github.sha }}
+  MOUKEY_GIT_DIRTY: "false"
 
 jobs:
   build-windows:
@@ -36,15 +36,15 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        run: pyinstaller Mouser.spec --noconfirm
+        run: pyinstaller Moukey.spec --noconfirm
 
       - name: Create archive
-        run: Compress-Archive -Path dist\Mouser -DestinationPath Mouser-Windows.zip
+        run: Compress-Archive -Path dist\Moukey -DestinationPath Moukey-Windows.zip
 
       - uses: actions/upload-artifact@v7
         with:
-          name: Mouser-Windows
-          path: Mouser-Windows.zip
+          name: Moukey-Windows
+          path: Moukey-Windows.zip
 
   build-macos:
     name: build-macos (${{ matrix.name }})
@@ -56,14 +56,14 @@ jobs:
             runner: macos-15
             python_architecture: arm64
             pyinstaller_target_arch: arm64
-            artifact_name: Mouser-macOS
-            archive_name: Mouser-macOS.zip
+            artifact_name: Moukey-macOS
+            archive_name: Moukey-macOS.zip
           - name: Intel
             runner: macos-15-intel
             python_architecture: x64
             pyinstaller_target_arch: x86_64
-            artifact_name: Mouser-macOS-intel
-            archive_name: Mouser-macOS-intel.zip
+            artifact_name: Moukey-macOS-intel
+            archive_name: Moukey-macOS-intel.zip
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v6
@@ -84,7 +84,7 @@ jobs:
           ./build_macos_app.sh
 
       - name: Create archive
-        run: cd dist && zip -r -y "../${{ matrix.archive_name }}" Mouser.app
+        run: cd dist && zip -r -y "../${{ matrix.archive_name }}" Moukey.app
 
       - uses: actions/upload-artifact@v7
         with:
@@ -120,7 +120,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        run: pyinstaller Mouser-linux.spec --noconfirm
+        run: pyinstaller Moukey-linux.spec --noconfirm
 
       - name: Audit Linux bundle dependencies
         run: |
@@ -130,7 +130,7 @@ jobs:
           import stat
           import subprocess
 
-          bundle_root = os.path.join("dist", "Mouser")
+          bundle_root = os.path.join("dist", "Moukey")
           if not os.path.isdir(bundle_root):
               raise SystemExit(f"Missing bundle directory: {bundle_root}")
 
@@ -160,7 +160,7 @@ jobs:
               env["LD_LIBRARY_PATH"] = ld_library_path
 
           def should_audit(path: pathlib.Path) -> bool:
-              if path == bundle_root_path / "Mouser":
+              if path == bundle_root_path / "Moukey":
                   return True
               try:
                   relative = path.relative_to(pyside_root)
@@ -206,7 +206,7 @@ jobs:
       - name: Smoke test Linux bundle startup
         run: |
           set +e
-          QT_QPA_PLATFORM=offscreen timeout --kill-after=5s 15s ./dist/Mouser/Mouser
+          QT_QPA_PLATFORM=offscreen timeout --kill-after=5s 15s ./dist/Moukey/Moukey
           status=$?
           set -e
           if [ "$status" -ne 0 ] && [ "$status" -ne 124 ] && [ "$status" -ne 137 ]; then
@@ -215,17 +215,17 @@ jobs:
 
       - name: Add Linux permission helper
         run: |
-          cp packaging/linux/69-mouser-logitech.rules dist/Mouser/
-          cp packaging/linux/install-linux-permissions.sh dist/Mouser/
-          chmod +x dist/Mouser/install-linux-permissions.sh
+          cp packaging/linux/69-moukey-logitech.rules dist/Moukey/
+          cp packaging/linux/install-linux-permissions.sh dist/Moukey/
+          chmod +x dist/Moukey/install-linux-permissions.sh
 
       - name: Create archive
-        run: cd dist && zip -r -y ../Mouser-Linux.zip Mouser
+        run: cd dist && zip -r -y ../Moukey-Linux.zip Moukey
 
       - uses: actions/upload-artifact@v7
         with:
-          name: Mouser-Linux
-          path: Mouser-Linux.zip
+          name: Moukey-Linux
+          path: Moukey-Linux.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/') || inputs.tag != ''
@@ -245,21 +245,21 @@ jobs:
       - name: Generate update metadata
         run: |
           mkdir -p update-assets
-          cp Mouser-Windows/Mouser-Windows.zip update-assets/
-          cp Mouser-macOS/Mouser-macOS.zip update-assets/
-          cp Mouser-macOS-intel/Mouser-macOS-intel.zip update-assets/
-          cp Mouser-Linux/Mouser-Linux.zip update-assets/
+          cp Moukey-Windows/Moukey-Windows.zip update-assets/
+          cp Moukey-macOS/Moukey-macOS.zip update-assets/
+          cp Moukey-macOS-intel/Moukey-macOS-intel.zip update-assets/
+          cp Moukey-Linux/Moukey-Linux.zip update-assets/
           python tools/generate_update_manifest.py \
             --repo "${{ github.repository }}" \
             --tag "${{ env.RELEASE_TAG }}" \
             --commit "${{ github.sha }}" \
             --asset-dir update-assets \
-            --output "mouser-${{ env.RELEASE_TAG }}-update.json"
+            --output "moukey-${{ env.RELEASE_TAG }}-update.json"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: Mouser-Update-Metadata
-          path: mouser-${{ env.RELEASE_TAG }}-update.json
+          name: Moukey-Update-Metadata
+          path: moukey-${{ env.RELEASE_TAG }}-update.json
 
       - name: Create or update GitHub Release
         env:
@@ -270,11 +270,11 @@ jobs:
             gh release upload "${{ env.RELEASE_TAG }}" \
               --repo "${{ github.repository }}" \
               --clobber \
-              Mouser-Windows/Mouser-Windows.zip \
-              Mouser-macOS/Mouser-macOS.zip \
-              Mouser-macOS-intel/Mouser-macOS-intel.zip \
-              Mouser-Linux/Mouser-Linux.zip \
-              mouser-${{ env.RELEASE_TAG }}-update.json
+              Moukey-Windows/Moukey-Windows.zip \
+              Moukey-macOS/Moukey-macOS.zip \
+              Moukey-macOS-intel/Moukey-macOS-intel.zip \
+              Moukey-Linux/Moukey-Linux.zip \
+              moukey-${{ env.RELEASE_TAG }}-update.json
           else
             # Checked-in notes win over auto-generated ones; a workflow_dispatch
             # run also creates the tag here (--target), since tag pushes are
@@ -288,11 +288,11 @@ jobs:
             gh release create "${{ env.RELEASE_TAG }}" \
               --repo "${{ github.repository }}" \
               --target "${{ github.sha }}" \
-              --title "Mouser ${{ env.RELEASE_TAG }}" \
+              --title "Moukey ${{ env.RELEASE_TAG }}" \
               "${notes_args[@]}" \
-              Mouser-Windows/Mouser-Windows.zip \
-              Mouser-macOS/Mouser-macOS.zip \
-              Mouser-macOS-intel/Mouser-macOS-intel.zip \
-              Mouser-Linux/Mouser-Linux.zip \
-              mouser-${{ env.RELEASE_TAG }}-update.json
+              Moukey-Windows/Moukey-Windows.zip \
+              Moukey-macOS/Moukey-macOS.zip \
+              Moukey-macOS-intel/Moukey-macOS-intel.zip \
+              Moukey-Linux/Moukey-Linux.zip \
+              moukey-${{ env.RELEASE_TAG }}-update.json
           fi

@@ -672,9 +672,9 @@ class SaveConfigTests(unittest.TestCase):
         regular file."""
         cfg = {"version": 9, "settings": {}, "profiles": {}}
         with tempfile.TemporaryDirectory() as temp_dir:
-            config_dir = Path(temp_dir) / "Application Support" / "Mouser"
+            config_dir = Path(temp_dir) / "Application Support" / "Moukey"
             config_dir.mkdir(parents=True)
-            real_dir = Path(temp_dir) / "dotfiles" / "mouser"
+            real_dir = Path(temp_dir) / "dotfiles" / "moukey"
             real_dir.mkdir(parents=True)
             real_target = real_dir / "config.json"
             real_target.write_text("{}", encoding="utf-8")
@@ -1160,6 +1160,38 @@ class BacklightDefaultsTests(unittest.TestCase):
         self.assertEqual(migrated["settings"]["scroll_force"], 70)
         self.assertFalse(migrated["settings"]["backlight_follow_theme"])
         self.assertIn("crown_tap", migrated["profiles"]["default"]["mappings"])
+
+
+class LegacyConfigMigrationTests(unittest.TestCase):
+    def test_copies_old_settings_into_new_folder_and_keeps_the_original(self):
+        with tempfile.TemporaryDirectory() as root:
+            old, new = os.path.join(root, "Mouser"), os.path.join(root, "Moukey")
+            os.makedirs(old)
+            Path(old, "config.json").write_text('{"version": 12}', encoding="utf-8")
+
+            self.assertTrue(config.migrate_legacy_config(new, old))
+
+            self.assertEqual(
+                Path(new, "config.json").read_text(encoding="utf-8"), '{"version": 12}')
+            self.assertTrue(Path(old, "config.json").exists())
+
+    def test_does_not_overwrite_an_existing_new_config(self):
+        with tempfile.TemporaryDirectory() as root:
+            old, new = os.path.join(root, "Mouser"), os.path.join(root, "Moukey")
+            os.makedirs(old)
+            os.makedirs(new)
+            Path(old, "config.json").write_text("old", encoding="utf-8")
+            Path(new, "config.json").write_text("new", encoding="utf-8")
+
+            self.assertFalse(config.migrate_legacy_config(new, old))
+            self.assertEqual(Path(new, "config.json").read_text(encoding="utf-8"), "new")
+
+    def test_nothing_to_migrate_is_a_noop(self):
+        with tempfile.TemporaryDirectory() as root:
+            new = os.path.join(root, "Moukey")
+            self.assertFalse(
+                config.migrate_legacy_config(new, os.path.join(root, "Mouser")))
+            self.assertFalse(os.path.exists(new))
 
 
 if __name__ == "__main__":

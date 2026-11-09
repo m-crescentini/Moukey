@@ -371,7 +371,7 @@ class _FakeHidListener:
 
 class BaseDeviceHookLivenessTests(unittest.TestCase):
     """The watchdog that stops a silently-dead HID++ handle from surviving
-    until the user restarts Mouser (issue #263, and #257 / #246 without the
+    until the user restarts Moukey (issue #263, and #257 / #246 without the
     sleep). It must probe when the mouse is provably in use and the handle
     has gone quiet -- and must stay silent in every other case, because a
     needless probe wakes an idle mouse to learn nothing."""
@@ -475,7 +475,7 @@ def _load_windows_hook_module():
 class WindowsHookWatchdogTests(unittest.TestCase):
     """Windows removes a low-level hook whose proc overruns
     LowLevelHooksTimeout and never says so -- the HHOOK stays valid and simply
-    stops firing, which is how users end up with a live-looking Mouser that
+    stops firing, which is how users end up with a live-looking Moukey that
     remaps nothing (#263 after sleep, #257 / #246 at random). Raw input is the
     independent witness that tells a dropped hook from an untouched mouse."""
 

@@ -1,6 +1,6 @@
 """Tests for the HID++ native wheel-invert path.
 
-Native invert = Mouser writes the firmware invert bit on `0x2121` /
+Native invert = Moukey writes the firmware invert bit on `0x2121` /
 `0x2150` *without* diverting the wheel through HID++ notifications. The OS
 receives native HID scroll with the direction already flipped at the
 device, so KVM forwarders see inverted scroll and the native scroll
@@ -166,7 +166,7 @@ class NativeInvertApplyTests(unittest.TestCase):
 
     def test_apply_invert_on_writes_invert_keeping_low_res(self):
         # Device is already low-res, so preserving bit 1 leaves it low-res.
-        # Mouser only adds the invert bit.
+        # Moukey only adds the invert bit.
         listener = self._setup_capable_listener()
         get_mode = _resp([0x00])
         with patch.object(
@@ -216,7 +216,7 @@ class NativeInvertApplyTests(unittest.TestCase):
 
     def test_apply_invert_clears_divert_bit_but_keeps_hires(self):
         # Pathological case: device left in divert state from a crashed
-        # Mouser session. We must still clear bit 0 (target) to recover it,
+        # Moukey session. We must still clear bit 0 (target) to recover it,
         # but bit 1 (hi-res) is not ours to clear -- see #244.
         listener = self._setup_capable_listener()
         get_mode = _resp([0x07])  # target + hi-res + invert
@@ -619,7 +619,7 @@ class MacOSSuppressionTests(unittest.TestCase):
         self.assertIs(result, cg_event)
 
     def test_os_inversion_resumes_when_logitech_reconnects(self):
-        """Disconnect/reconnect transitions must not require Mouser restart:
+        """Disconnect/reconnect transitions must not require Moukey restart:
         the very next event after ``_connected_device`` flips back to a
         ``ConnectedDeviceInfo`` is the one we start inverting again.
         """
@@ -822,7 +822,7 @@ class EngineNativeInvertTests(_EngineNativeInvertMixin, unittest.TestCase):
 
     def test_capable_device_resets_to_native_when_invert_off(self):
         # Even with both flags False, the engine still owns the wheel-mode
-        # write so a stale invert lease from a prior crashed Mouser session
+        # write so a stale invert lease from a prior crashed Moukey session
         # gets reset to non-inverted on connect.
         engine = self._make_engine(invert_v=False, invert_h=False)
         engine._apply_wheel_invert_setting()
@@ -898,7 +898,7 @@ class EngineNativeInvertTests(_EngineNativeInvertMixin, unittest.TestCase):
 #
 # An MX Master parks itself after a long idle. The 0x2150 thumbwheel invert
 # (and the 0x2121 wheel-mode bit) are volatile, so the device comes back with
-# them cleared while Mouser's own state -- config, UI toggle, and the cached
+# them cleared while Moukey's own state -- config, UI toggle, and the cached
 # `_wheel_divert_active_local` -- still says "inverted". Nothing here changed,
 # so the fast path in `_apply_wheel_invert_setting` used to short-circuit and
 # the inversion silently stopped working until the setting was toggled.
@@ -1132,7 +1132,7 @@ class EngineWakeReplayTests(_EngineNativeInvertMixin, unittest.TestCase):
         self.assertEqual(hg.requests, [(False, True)])
         hg.requests.clear()
 
-        # The mouse slept and came back: everything Mouser tracks is
+        # The mouse slept and came back: everything Moukey tracks is
         # unchanged, only the firmware forgot. The plain apply must no-op
         # (that is the bug) and the wake path must write anyway.
         engine._apply_wheel_invert_setting()

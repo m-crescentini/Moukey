@@ -9,21 +9,21 @@ import tempfile
 
 # Windows
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-RUN_VALUE_NAME = "Mouser"
+RUN_VALUE_NAME = "Moukey"
 
 # macOS
-MACOS_LAUNCH_AGENT_LABEL = "io.github.tombadash.mouser"
+MACOS_LAUNCH_AGENT_LABEL = "io.github.tombadash.moukey"
 MACOS_PLIST_NAME = f"{MACOS_LAUNCH_AGENT_LABEL}.plist"
 
 # Linux
-LINUX_APP_ID = "io.github.tombadash.mouser"
-LINUX_DESKTOP_ENTRY_NAME = "io.github.tombadash.mouser.desktop"
+LINUX_APP_ID = "io.github.tombadash.moukey"
+LINUX_DESKTOP_ENTRY_NAME = "io.github.tombadash.moukey.desktop"
 LINUX_DESKTOP_TEMPLATE_NAME = f"{LINUX_DESKTOP_ENTRY_NAME}.in"
 LINUX_AUTOSTART_DELAY_SECONDS = 15
 LINUX_ICON_NAME = LINUX_APP_ID
 LINUX_ICON_FILENAME = f"{LINUX_ICON_NAME}.png"
 LINUX_ICON_SIZES = (16, 24, 32, 48, 64, 128, 256, 512)
-APP_DISPLAY_NAME = "Mouser"
+APP_DISPLAY_NAME = "Moukey"
 
 
 def supports_login_startup():
@@ -247,7 +247,7 @@ def _linux_icon_name_or_path() -> str:
 
 
 def sync_linux_icon_theme() -> bool:
-    """Best-effort sync of Mouser's hicolor icons into the user's icon theme."""
+    """Best-effort sync of Moukey's hicolor icons into the user's icon theme."""
     return _sync_linux_icon_theme()
 
 

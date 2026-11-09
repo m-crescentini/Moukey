@@ -237,7 +237,7 @@ class DeviceHook(BaseDeviceHook):
             try:
                 self._uinput = _UInput(
                     events=self._filtered_uinput_events(dev),
-                    name="Mouser Virtual Mouse",
+                    name="Moukey Virtual Mouse",
                     vendor=getattr(dev.info, "vendor", 1),
                     product=getattr(dev.info, "product", 1),
                     version=getattr(dev.info, "version", 1),
@@ -547,7 +547,7 @@ class DeviceHook(BaseDeviceHook):
             if rel_caps and any(c in hi_res_codes for c in rel_caps):
                 print(
                     "[DeviceHook] Filtering REL_WHEEL_HI_RES / "
-                    "REL_HWHEEL_HI_RES from Mouser Virtual Mouse"
+                    "REL_HWHEEL_HI_RES from Moukey Virtual Mouse"
                 )
         return caps
 

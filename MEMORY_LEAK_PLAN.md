@@ -221,7 +221,7 @@ Reproducible measurement commands, standardized from #238 so all reporters
 produce comparable numbers:
 
 ```bash
-PID="$(pgrep -x Mouser)"
+PID="$(pgrep -x Moukey)"
 top -l 1 -pid "$PID" -stats pid,command,cpu,mem,ports,threads,time
 vmmap -summary "$PID"
 heap -s -H "$PID"

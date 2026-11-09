@@ -17,12 +17,12 @@ ApplicationWindow {
     title: {
         backend.deviceTick
         if (root.currentPage === 1)
-            return "Mouser " + versionLabel
+            return "Moukey " + versionLabel
         var info = backend.deviceInfoForType(
             root.currentPage === 2 ? "keyboard" : "mouse")
         return info.connected
-               ? "Mouser " + versionLabel + " — " + info.name
-               : "Mouser " + versionLabel
+               ? "Moukey " + versionLabel + " — " + info.name
+               : "Moukey " + versionLabel
     }
 
     property string appearanceMode: uiState.appearanceMode
@@ -120,7 +120,7 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Accessible.role: Accessible.StaticText
-                        Accessible.name: "Mouser"
+                        Accessible.name: "Moukey"
                         Accessible.description: root.versionLabel
 
                         AppIcon {
@@ -417,7 +417,7 @@ ApplicationWindow {
                         spacing: 3
 
                         Text {
-                            text: lm.strings["about.title"] || "About Mouser"
+                            text: lm.strings["about.title"] || "About Moukey"
                             font { family: uiState.fontFamily; pixelSize: 17; bold: true }
                             color: theme.textPrimary
                         }
