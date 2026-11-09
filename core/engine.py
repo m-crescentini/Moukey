@@ -319,14 +319,14 @@ class Engine:
             )
         )
 
-        # Divert Logitech Craft top-row keys only when remapped in some profile;
-        # un-mapped keys are left alone so their native function still works.
+        # Divert a top-row keyboard key only while the ACTIVE profile remaps it.
+        # A diverted key loses its native function (the firmware reports it to
+        # us instead of to the OS), so diverting on "any profile remaps it"
+        # left the key dead in every profile where it is "Do Nothing". Profile
+        # switches re-run this and push the new set via refresh_diverts().
         keyboard_keys = {}
         for button_key, cid in KEYBOARD_KEY_CIDS.items():
-            if any(
-                pdata.get("mappings", {}).get(button_key, "none") != "none"
-                for pdata in self.cfg.get("profiles", {}).values()
-            ):
+            if mappings.get(button_key, "none") != "none":
                 keyboard_keys[cid] = button_key
 
         # Backlight re-enable divert (UP key only). Keep the base set so the

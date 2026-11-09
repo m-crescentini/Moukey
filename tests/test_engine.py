@@ -759,6 +759,45 @@ class EngineReplayPhaseOneTests(unittest.TestCase):
         engine.hook._hid_gesture.read_smart_shift.assert_called_once_with()
 
 
+class EngineKeyboardDivertFollowsActiveProfileTests(unittest.TestCase):
+    """A diverted key loses its native function, so the divert set must follow
+    the active profile: a key remapped only in an app profile must stay native
+    (not dead) in the Default profile."""
+
+    def _make_engine(self):
+        from core.engine import Engine
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        cfg["profiles"]["chrome"] = {
+            "label": "Chrome",
+            "apps": ["chrome.exe"],
+            "mappings": dict(cfg["profiles"]["default"]["mappings"]),
+        }
+        cfg["profiles"]["chrome"]["mappings"]["kbd_calculator"] = "volume_up"
+        with (
+            patch("core.engine.DeviceHook", _FakeDeviceHook),
+            patch("core.engine.AppDetector", _FakeAppDetector),
+            patch("core.engine.load_config", return_value=cfg),
+        ):
+            return Engine()
+
+    def test_key_remapped_only_elsewhere_is_not_diverted_in_default(self):
+        from core.logi_device_catalog import KEYBOARD_KEY_CIDS
+        cid = KEYBOARD_KEY_CIDS["kbd_calculator"]
+        engine = self._make_engine()
+        self.assertNotIn(cid, engine.hook.divert_keyboard_keys)
+
+    def test_switching_profile_diverts_then_releases_the_key(self):
+        from core.logi_device_catalog import KEYBOARD_KEY_CIDS
+        cid = KEYBOARD_KEY_CIDS["kbd_calculator"]
+        engine = self._make_engine()
+
+        engine._switch_profile("chrome")
+        self.assertIn(cid, engine.hook.divert_keyboard_keys)
+
+        engine._switch_profile("default")
+        self.assertNotIn(cid, engine.hook.divert_keyboard_keys)
+
+
 class EngineBacklightThemeOnOffTests(unittest.TestCase):
     def _make_engine(self, follow=True, up_map="none", down_map="none"):
         from core.engine import Engine
