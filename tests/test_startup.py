@@ -158,14 +158,14 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
 
         self.assertEqual(
             plist_path,
-            "/Users/test/Library/LaunchAgents/io.github.tombadash.moukey.plist",
+            "/Users/test/Library/LaunchAgents/io.github.m_crescentini.moukey.plist",
         )
 
     def test_macos_enable_writes_plist_and_bootstraps(self):
         domain = "gui/501"
 
         with tempfile.TemporaryDirectory() as tmp:
-            plist = os.path.join(tmp, "LaunchAgents", "io.github.tombadash.moukey.plist")
+            plist = os.path.join(tmp, "LaunchAgents", "io.github.m_crescentini.moukey.plist")
 
             with (
                 patch.object(sys, "platform", "darwin"),
@@ -191,7 +191,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
         domain = "gui/501"
 
         with tempfile.TemporaryDirectory() as tmp:
-            plist = os.path.join(tmp, "io.github.tombadash.moukey.plist")
+            plist = os.path.join(tmp, "io.github.m_crescentini.moukey.plist")
 
             with (
                 patch.object(sys, "platform", "darwin"),
@@ -218,7 +218,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
         domain = "gui/501"
 
         with tempfile.TemporaryDirectory() as tmp:
-            plist = os.path.join(tmp, "io.github.tombadash.moukey.plist")
+            plist = os.path.join(tmp, "io.github.m_crescentini.moukey.plist")
 
             with (
                 patch.object(sys, "platform", "darwin"),
@@ -246,7 +246,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
         domain = "gui/501"
 
         with tempfile.TemporaryDirectory() as tmp:
-            plist = os.path.join(tmp, "io.github.tombadash.moukey.plist")
+            plist = os.path.join(tmp, "io.github.m_crescentini.moukey.plist")
             with open(plist, "wb") as f:
                 f.write(b"old plist")
 
@@ -279,7 +279,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
             )
 
     def test_macos_enable_does_not_bootout_when_existing_plist_cannot_be_preserved(self):
-        plist = "/tmp/io.github.tombadash.moukey.plist"
+        plist = "/tmp/io.github.m_crescentini.moukey.plist"
 
         with (
             patch.object(sys, "platform", "darwin"),
@@ -301,7 +301,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
         domain = "gui/501"
 
         with tempfile.TemporaryDirectory() as tmp:
-            plist = os.path.join(tmp, "io.github.tombadash.moukey.plist")
+            plist = os.path.join(tmp, "io.github.m_crescentini.moukey.plist")
             with open(plist, "wb") as f:
                 f.write(b"old plist")
 
@@ -343,7 +343,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
             )
 
     def test_macos_disable_bootout_and_remove_when_plist_exists(self):
-        plist = "/tmp/io.github.tombadash.moukey.plist"
+        plist = "/tmp/io.github.m_crescentini.moukey.plist"
         domain = "gui/501"
 
         with (
@@ -365,7 +365,7 @@ class ApplyLoginStartupMacTests(unittest.TestCase):
         m_remove.assert_called_once_with(plist)
 
     def test_macos_disable_uses_label_bootout_when_no_plist(self):
-        plist = "/tmp/io.github.tombadash.moukey.plist"
+        plist = "/tmp/io.github.m_crescentini.moukey.plist"
         domain = "gui/501"
 
         with (

@@ -23,7 +23,7 @@ import zipfile
 from core.version import APP_VERSION
 
 
-APP_ID = "io.github.tombadash.moukey"
+APP_ID = "io.github.m_crescentini.moukey"
 STABLE_CHANNEL = "stable"
 MANIFEST_SCHEMA_VERSION = 1
 DEFAULT_MANIFEST_NAME = "moukey-v{version}-update.json"

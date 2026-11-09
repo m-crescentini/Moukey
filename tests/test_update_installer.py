@@ -160,7 +160,7 @@ class UpdateInstallerTests(unittest.TestCase):
             )
 
     def test_fetch_json_accepts_utf8_bom_response(self):
-        payload = b'\xef\xbb\xbf{"schema": 1, "app_id": "io.github.tombadash.moukey"}'
+        payload = b'\xef\xbb\xbf{"schema": 1, "app_id": "io.github.m_crescentini.moukey"}'
 
         with patch("urllib.request.urlopen", return_value=_FakeHTTPResponse(payload)):
             parsed = fetch_json("https://example.test/update.json")

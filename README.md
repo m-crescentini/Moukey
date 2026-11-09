@@ -13,6 +13,11 @@ keyboards, with detection and fallback UI support for additional Logitech models
 
 **No telemetry. No cloud. No Logitech account required.**
 
+> **Moukey is a fork of [Mouser](https://github.com/TomBadash/Mouser) by Tom Badash**,
+> released under the same MIT license (see [LICENSE](LICENSE)). It adds changes of its
+> own and is maintained separately; it is not affiliated with Logitech or with the
+> original project.
+
 ---
 
 ## Contents
@@ -356,13 +361,13 @@ The helper installs `69-moukey-logitech.rules`, reloads `udev`, and tries to `mo
 The first normal Linux launch creates or refreshes:
 
 ```text
-~/.local/share/applications/io.github.tombadash.moukey.desktop
+~/.local/share/applications/io.github.m_crescentini.moukey.desktop
 ```
 
 The generated launcher uses absolute paths for the current portable app or source checkout, and syncs Moukey's app icon into the per-user hicolor icon theme when possible. If you move the checkout, launch Moukey once from the new path to refresh the app-menu entry. Enabling **Start at login** also manages:
 
 ```text
-~/.config/autostart/io.github.tombadash.moukey.desktop
+~/.config/autostart/io.github.m_crescentini.moukey.desktop
 ```
 
 That Linux autostart entry includes a short GNOME startup delay so Moukey does not race Bluetooth / HID initialization immediately after login.
@@ -418,7 +423,7 @@ Contributions are welcome.
 
 ## Support the project
 
-If Moukey saves you from installing Logitech Options+, consider supporting development:
+Moukey builds on Mouser. If it saves you from installing Logitech Options+, consider supporting the original author:
 
 <p align="center">
   <a href="https://github.com/sponsors/TomBadash">

@@ -83,13 +83,13 @@ class AppIdentityTests(unittest.TestCase):
     def test_app_icon_uses_linux_runtime_asset(self):
         with (
             patch.object(main_qml.sys, "platform", "linux"),
-            patch.object(main_qml, "linux_runtime_icon_path", return_value="/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.tombadash.moukey.png"),
+            patch.object(main_qml, "linux_runtime_icon_path", return_value="/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.m_crescentini.moukey.png"),
             patch.object(main_qml.os.path, "isfile", return_value=True),
             patch.object(main_qml, "QIcon", side_effect=lambda path: path),
         ):
             self.assertEqual(
                 main_qml._app_icon(),
-                "/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.tombadash.moukey.png",
+                "/tmp/Moukey/linux/icons/hicolor/256x256/apps/io.github.m_crescentini.moukey.png",
             )
 
     @unittest.skipIf(sys.platform == "win32", "uses POSIX path literals; not meaningful on Windows")

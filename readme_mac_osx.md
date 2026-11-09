@@ -118,7 +118,7 @@ Use `--start-hidden` to launch straight into the menu bar without opening the se
 
 Moukey can now manage **Start at login** from the app UI on macOS.
 
-- The toggle writes a LaunchAgent plist to `~/Library/LaunchAgents/io.github.tombadash.moukey.plist`
+- The toggle writes a LaunchAgent plist to `~/Library/LaunchAgents/io.github.m_crescentini.moukey.plist`
 - The setting is designed for the packaged `.app`, but it also works in a source checkout by launching the current Python interpreter directly
 - If **Start minimized** is enabled in Moukey, the app still launches tray-first after login because that preference is read from config at startup
 - Turning **Start at login** back off removes that LaunchAgent plist again

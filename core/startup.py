@@ -12,12 +12,12 @@ RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE_NAME = "Moukey"
 
 # macOS
-MACOS_LAUNCH_AGENT_LABEL = "io.github.tombadash.moukey"
+MACOS_LAUNCH_AGENT_LABEL = "io.github.m_crescentini.moukey"
 MACOS_PLIST_NAME = f"{MACOS_LAUNCH_AGENT_LABEL}.plist"
 
 # Linux
-LINUX_APP_ID = "io.github.tombadash.moukey"
-LINUX_DESKTOP_ENTRY_NAME = "io.github.tombadash.moukey.desktop"
+LINUX_APP_ID = "io.github.m_crescentini.moukey"
+LINUX_DESKTOP_ENTRY_NAME = "io.github.m_crescentini.moukey.desktop"
 LINUX_DESKTOP_TEMPLATE_NAME = f"{LINUX_DESKTOP_ENTRY_NAME}.in"
 LINUX_AUTOSTART_DELAY_SECONDS = 15
 LINUX_ICON_NAME = LINUX_APP_ID

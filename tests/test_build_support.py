@@ -76,7 +76,7 @@ class LinuxPermissionPackagingTests(unittest.TestCase):
         linux_assets = (
             "69-moukey-logitech.rules",
             "install-linux-permissions.sh",
-            "io.github.tombadash.moukey.desktop.in",
+            "io.github.m_crescentini.moukey.desktop.in",
         )
         for asset_name in linux_assets:
             with self.subTest(asset=asset_name):

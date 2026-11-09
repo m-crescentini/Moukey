@@ -99,7 +99,7 @@ a = Analysis(
             "linux",
         ),
         (
-            os.path.join(ROOT, "packaging", "linux", "io.github.tombadash.moukey.desktop.in"),
+            os.path.join(ROOT, "packaging", "linux", "io.github.m_crescentini.moukey.desktop.in"),
             "linux",
         ),
         (

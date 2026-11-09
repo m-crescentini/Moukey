@@ -81,8 +81,8 @@ def _print_startup_times():
     print(f"[Startup] Total imports:    {(_t4-_t0)*1000:7.1f} ms")
 
 
-LINUX_DESKTOP_FILE_BASENAME = "io.github.tombadash.moukey"
-WINDOWS_APP_USER_MODEL_ID = "TomBadash.Moukey"
+LINUX_DESKTOP_FILE_BASENAME = "io.github.m_crescentini.moukey"
+WINDOWS_APP_USER_MODEL_ID = "m_crescentini.Moukey"
 
 
 def _parse_cli_args(argv):

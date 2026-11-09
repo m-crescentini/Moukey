@@ -28,7 +28,7 @@ elif os.path.exists(GENERATED_ICON):
     ICON_PATH = GENERATED_ICON
 else:
     ICON_PATH = None
-BUNDLE_ID = "io.github.tombadash.moukey"
+BUNDLE_ID = "io.github.m_crescentini.moukey"
 
 
 def _load_app_version() -> str:

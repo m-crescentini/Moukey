@@ -10,6 +10,10 @@
 
 **零遥测，零云端，无需罗技账号。**
 
+> **Moukey 是 Tom Badash 的 [Mouser](https://github.com/TomBadash/Mouser) 的分支（fork）**，
+> 采用相同的 MIT 许可证（见 [LICENSE](LICENSE)）。它包含自己的修改并单独维护，
+> 与罗技及原项目均无隶属关系。
+
 ---
 
 ## 目录

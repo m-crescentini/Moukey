@@ -23,7 +23,7 @@ Outputs (regenerated in place)
     macOS-style gutter for drop shadows. Consumed by ``Moukey.spec`` on
     the Windows build path.
 
-``packaging/linux/icons/hicolor/<size>x<size>/apps/io.github.tombadash.moukey.png``
+``packaging/linux/icons/hicolor/<size>x<size>/apps/io.github.m_crescentini.moukey.png``
     Linux icon-theme PNG ladder for portable zip desktop integration.
     Uses the same fitted icon body as the Windows asset so small KDE
     taskbar entries stay legible.
@@ -60,7 +60,7 @@ OUT_LINUX_HICOLOR = ROOT / "packaging" / "linux" / "icons" / "hicolor"
 
 MAC_CANVAS = 1024
 WIN_CANVAS = 1024
-LINUX_ICON_NAME = "io.github.tombadash.moukey"
+LINUX_ICON_NAME = "io.github.m_crescentini.moukey"
 # Apple icon grid: 824 squircle on 1024 canvas (10% gutter each side).
 # Microsoft Learn / Linux taskbars: no fixed gutter; 96% fill keeps the
 # 16 px tile readable.

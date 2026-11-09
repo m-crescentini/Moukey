@@ -106,6 +106,8 @@ a = Analysis(
         # Image assets
         (os.path.join(ROOT, "images"), "images"),
         (BUILD_INFO_DATA, "."),
+        # MIT license text must ship with every distributed copy.
+        (os.path.join(ROOT, "LICENSE"), "."),
     ],
     hiddenimports=[
         # conditional / lazy imports PyInstaller may miss
