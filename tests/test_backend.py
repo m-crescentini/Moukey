@@ -1684,6 +1684,50 @@ class BackendActionsRingOpenAppTests(unittest.TestCase):
         save_mock.assert_not_called()
 
 
+class BackendRingVersusSwipeTests(unittest.TestCase):
+    """The Actions Ring and Gesture Swipe both need the button held down, so
+    giving a button the ring silences its saved swipe bindings; say so."""
+
+    def _backend(self, **default_maps):
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        cfg["profiles"]["default"]["mappings"].update(default_maps)
+        with (
+            patch("ui.backend.load_config", return_value=cfg),
+            patch("ui.backend.save_config"),
+            patch("core.config.save_config"),
+            patch("ui.backend.supports_login_startup", return_value=False),
+        ):
+            return Backend(engine=None)
+
+    def _pick(self, backend, button, action):
+        statuses = []
+        backend.statusMessage.connect(statuses.append)
+        with patch("core.config.save_config"):
+            backend.setProfileMapping("default", button, action)
+        return statuses
+
+    def test_ring_over_saved_swipe_actions_warns(self):
+        backend = self._backend(gesture="none", gesture_left="volume_down")
+        statuses = self._pick(backend, "gesture", "activate_actions_ring")
+
+        self.assertEqual(len(statuses), 1)
+        self.assertIn("Actions Ring replaces Gesture Swipe", statuses[0])
+
+    def test_saved_tap_action_also_counts(self):
+        backend = self._backend(gesture="none", gesture_tap="mute")
+        statuses = self._pick(backend, "gesture", "activate_actions_ring")
+        self.assertIn("replaces Gesture Swipe", statuses[0])
+
+    def test_ring_without_swipe_actions_just_saves(self):
+        backend = self._backend(gesture="none")
+        self.assertEqual(
+            self._pick(backend, "gesture", "activate_actions_ring"), ["Saved"])
+
+    def test_other_actions_just_save(self):
+        backend = self._backend(gesture="none", gesture_left="volume_down")
+        self.assertEqual(self._pick(backend, "gesture", "mute"), ["Saved"])
+
+
 class BackendHandleDpiReadTests(unittest.TestCase):
     """Device-reported DPI must persist to ``config.json`` so a hardware
     DPI change taken on the mouse survives the next Moukey restart, and

@@ -175,6 +175,7 @@ _TRANSLATIONS = {
         "toast.profile_deleted": "Profile deleted",
         "toast.profile_exists": "Profile already exists",
         "toast.config_copied": "Configuration copied",
+        "toast.ring_replaces_swipe": "Actions Ring replaces Gesture Swipe on this button; the saved swipe actions are kept but inactive",
 
         # Scroll / Settings page
         "scroll.title": "Settings",
@@ -486,6 +487,7 @@ _TRANSLATIONS = {
         "toast.profile_deleted": "\u5df2\u5220\u9664\u914d\u7f6e\u6587\u4ef6",
         "toast.profile_exists": "\u914d\u7f6e\u6587\u4ef6\u5df2\u5b58\u5728",
         "toast.config_copied": "\u5df2\u590d\u5236\u914d\u7f6e",
+        "toast.ring_replaces_swipe": "Actions Ring \u5c06\u53d6\u4ee3\u6b64\u6309\u952e\u7684\u624b\u52bf\u6ed1\u52a8\uff1b\u5df2\u4fdd\u5b58\u7684\u6ed1\u52a8\u52a8\u4f5c\u4f1a\u4fdd\u7559\uff0c\u4f46\u6682\u4e0d\u751f\u6548",
 
         "scroll.title": "\u8bbe\u7f6e",
         "scroll.subtitle": "\u914d\u7f6e\u9f20\u6807\u548c\u952e\u76d8",
@@ -789,6 +791,7 @@ _TRANSLATIONS = {
         "toast.profile_deleted": "\u5df2\u522a\u9664\u8a2d\u5b9a\u6a94",
         "toast.profile_exists": "\u8a2d\u5b9a\u6a94\u5df2\u5b58\u5728",
         "toast.config_copied": "\u5df2\u8907\u88fd\u8a2d\u5b9a",
+        "toast.ring_replaces_swipe": "Actions Ring \u5c07\u53d6\u4ee3\u6b64\u6309\u9375\u7684\u624b\u52e2\u6ed1\u52d5\uff1b\u5df2\u5132\u5b58\u7684\u6ed1\u52d5\u52d5\u4f5c\u6703\u4fdd\u7559\uff0c\u4f46\u66ab\u4e0d\u751f\u6548",
 
         "scroll.title": "\u8a2d\u5b9a",
         "scroll.subtitle": "\u8a2d\u5b9a\u60a8\u7684\u6ed1\u9f20\u8207\u9375\u76e4",

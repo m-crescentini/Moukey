@@ -1805,9 +1805,21 @@ class Backend(QObject):
         self._bump_device_tick()
         self.statusMessage.emit("Saved")
 
+    def _ring_replaces_swipe(self, profileName, button, actionId):
+        """True when giving *button* the Actions Ring would silence swipe/tap
+        actions the profile has saved for it. The ring and Gesture Swipe both
+        need the button held down, so the engine drops the swipe bindings while
+        the ring owns the button (they stay saved, but inactive)."""
+        if actionId != "activate_actions_ring" or button not in SWIPE_CAPABLE_BUTTONS:
+            return False
+        mappings = self._cfg.get("profiles", {}).get(profileName, {}).get("mappings", {})
+        keys = [f"{button}_tap"] + [f"{button}_{d}" for d in GESTURE_SWIPE_DIRECTIONS]
+        return any(mappings.get(key, "none") not in ("none", "") for key in keys)
+
     @Slot(str, str, str)
     def setProfileMapping(self, profileName, button, actionId):
         """Set a button mapping in a specific profile."""
+        replaces_swipe = self._ring_replaces_swipe(profileName, button, actionId)
         self._cfg = set_mapping(self._cfg, button, actionId,
                                 profile=profileName)
         if self._engine:
@@ -1815,7 +1827,13 @@ class Backend(QObject):
         self.profilesChanged.emit()
         self.mappingsChanged.emit()
         self._bump_device_tick()
-        self.statusMessage.emit("Saved")
+        if replaces_swipe:
+            self.statusMessage.emit(self._tr(
+                "toast.ring_replaces_swipe",
+                "Actions Ring replaces Gesture Swipe on this button; "
+                "the saved swipe actions are kept but inactive"))
+        else:
+            self.statusMessage.emit("Saved")
 
     @Slot(bool)
     def setStartMinimized(self, value):

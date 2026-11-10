@@ -493,6 +493,22 @@ Item {
         return backend.actionLabelFor(actionId)
     }
 
+    // The Actions Ring is driven by holding its button down, so it cannot be a
+    // tap or a swipe action: the tap and the four swipe lists leave it out.
+    readonly property var swipeActions: backend.allActions.filter(
+        function(a) { return a.id !== "activate_actions_ring" })
+
+    function swipeActionIndexForId(actionId) {
+        var actions = swipeActions
+        for (var i = 0; i < actions.length; i++)
+            if (actions[i].id === actionId) return i
+        for (var j = 0; j < actions.length; j++) {
+            if (actionId.startsWith("custom:") && actions[j].id === "__custom__") return j
+            if (actionId.startsWith("open_app:") && actions[j].id === "__open_app__") return j
+        }
+        return 0
+    }
+
     function isCustomAction(actionId) {
         return actionId.startsWith("custom:")
     }
@@ -1548,15 +1564,22 @@ Item {
                                         delegate: ActionChip {
                                             visible: modelData.id !== "activate_actions_ring"
                                             actionId: modelData.id
-                                            actionLabel: modelData.id === "__custom__" && isCustomAction(hscrollLeftActionId)
+                                            actionLabel: (modelData.id === "__custom__" && isCustomAction(hscrollLeftActionId))
+                                                         || (modelData.id === "__open_app__" && isOpenAppAction(hscrollLeftActionId))
                                                          ? customLabel(hscrollLeftActionId)
                                                          : (lm.strings, lm.trAction(modelData.label))
                                             isCurrent: modelData.id === "__custom__"
                                                        ? isCustomAction(hscrollLeftActionId)
-                                                       : modelData.id === hscrollLeftActionId
+                                                       : modelData.id === "__open_app__"
+                                                         ? isOpenAppAction(hscrollLeftActionId)
+                                                         : modelData.id === hscrollLeftActionId
                                             onPicked: function(aid) {
                                                 if (aid === "__custom__") {
                                                     keyCaptureDialog.open(selectedProfile, "hscroll_left")
+                                                    return
+                                                }
+                                                if (aid === "__open_app__") {
+                                                    backend.pickAppForMapping(selectedProfile, "hscroll_left")
                                                     return
                                                 }
                                                 backend.setProfileMapping(
@@ -1582,15 +1605,22 @@ Item {
                                         delegate: ActionChip {
                                             visible: modelData.id !== "activate_actions_ring"
                                             actionId: modelData.id
-                                            actionLabel: modelData.id === "__custom__" && isCustomAction(hscrollRightActionId)
+                                            actionLabel: (modelData.id === "__custom__" && isCustomAction(hscrollRightActionId))
+                                                         || (modelData.id === "__open_app__" && isOpenAppAction(hscrollRightActionId))
                                                          ? customLabel(hscrollRightActionId)
                                                          : (lm.strings, lm.trAction(modelData.label))
                                             isCurrent: modelData.id === "__custom__"
                                                        ? isCustomAction(hscrollRightActionId)
-                                                       : modelData.id === hscrollRightActionId
+                                                       : modelData.id === "__open_app__"
+                                                         ? isOpenAppAction(hscrollRightActionId)
+                                                         : modelData.id === hscrollRightActionId
                                             onPicked: function(aid) {
                                                 if (aid === "__custom__") {
                                                     keyCaptureDialog.open(selectedProfile, "hscroll_right")
+                                                    return
+                                                }
+                                                if (aid === "__open_app__") {
+                                                    backend.pickAppForMapping(selectedProfile, "hscroll_right")
                                                     return
                                                 }
                                                 backend.setProfileMapping(
@@ -1997,19 +2027,23 @@ Item {
                                 }
                                 ComboBox {
                                     width: parent.width
-                                    model: backend.allActions
+                                    model: swipeActions
                                     textRole: "label"
                                     delegate: actionComboDelegate
                                     Material.accent: theme.accent
                                     font { family: uiState.fontFamily; pixelSize: 11 }
-                                    currentIndex: actionIndexForId(gsTapActionId)
-                                    displayText: isCustomAction(gsTapActionId)
+                                    currentIndex: swipeActionIndexForId(gsTapActionId)
+                                    displayText: (isCustomAction(gsTapActionId) || isOpenAppAction(gsTapActionId))
                                                  ? customLabel(gsTapActionId)
                                                  : (lm.strings, lm.trAction(currentText))
                                     onActivated: function(index) {
-                                        var aid = backend.allActions[index].id
+                                        var aid = swipeActions[index].id
                                         if (aid === "__custom__") {
                                             keyCaptureDialog.open(selectedProfile, selectedButton + "_tap")
+                                            return
+                                        }
+                                        if (aid === "__open_app__") {
+                                            backend.pickAppForMapping(selectedProfile, selectedButton + "_tap")
                                             return
                                         }
                                         backend.setProfileMapping(
@@ -2074,20 +2108,24 @@ Item {
                                         }
                                         ComboBox {
                                             Layout.fillWidth: true
-                                            model: backend.allActions
+                                            model: swipeActions
                                             textRole: "label"
                                             delegate: actionComboDelegate
                                             Material.accent: theme.accent
                                             font { family: uiState.fontFamily; pixelSize: 11 }
-                                            currentIndex: actionIndexForId(modelData.aid)
-                                            displayText: isCustomAction(modelData.aid)
+                                            currentIndex: swipeActionIndexForId(modelData.aid)
+                                            displayText: (isCustomAction(modelData.aid) || isOpenAppAction(modelData.aid))
                                                          ? customLabel(modelData.aid)
                                                          : (lm.strings, lm.trAction(currentText))
                                             onActivated: function(index) {
-                                                var aid = backend.allActions[index].id
+                                                var aid = swipeActions[index].id
                                                 var key = selectedButton + "_" + modelData.dir
                                                 if (aid === "__custom__") {
                                                     keyCaptureDialog.open(selectedProfile, key)
+                                                    return
+                                                }
+                                                if (aid === "__open_app__") {
+                                                    backend.pickAppForMapping(selectedProfile, key)
                                                     return
                                                 }
                                                 backend.setProfileMapping(selectedProfile, key, aid)
