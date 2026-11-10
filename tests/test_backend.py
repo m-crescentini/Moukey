@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -1636,6 +1637,53 @@ class BackendLoginStartupTests(unittest.TestCase):
 
 
 @unittest.skipIf(Backend is None, "PySide6 not installed in test environment")
+class BackendActionsRingOpenAppTests(unittest.TestCase):
+    """Choosing "Open Application" for an Actions Ring slot stores the picked
+    program instead of an unusable placeholder."""
+
+    def _backend(self, cfg):
+        with (
+            patch("ui.backend.load_config", return_value=cfg),
+            patch("ui.backend.save_config") as save_mock,
+            patch("ui.backend.supports_login_startup", return_value=False),
+        ):
+            backend = Backend(engine=None)
+        return backend, save_mock
+
+    def test_pick_app_for_ring_slot_stores_open_app_action(self):
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        backend, _ = self._backend(cfg)
+        with (
+            patch("ui.backend.save_config") as save_mock,
+            patch(
+                "PySide6.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=("C:/Apps/Code.exe", ""),
+            ),
+        ):
+            backend.pickAppForRingSlot(2)
+
+        slots = backend.actionsRingSlots
+        self.assertEqual(slots[2], "open_app:" + os.path.normpath("C:/Apps/Code.exe"))
+        self.assertEqual(len(slots), 4)
+        save_mock.assert_called_once()
+
+    def test_cancelled_picker_leaves_slots_untouched(self):
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        backend, _ = self._backend(cfg)
+        before = list(backend.actionsRingSlots)
+        with (
+            patch("ui.backend.save_config") as save_mock,
+            patch(
+                "PySide6.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=("", ""),
+            ),
+        ):
+            backend.pickAppForRingSlot(1)
+
+        self.assertEqual(backend.actionsRingSlots, before)
+        save_mock.assert_not_called()
+
+
 class BackendHandleDpiReadTests(unittest.TestCase):
     """Device-reported DPI must persist to ``config.json`` so a hardware
     DPI change taken on the mouse survives the next Moukey restart, and

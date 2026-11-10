@@ -2325,10 +2325,9 @@ class Backend(QObject):
         self.profilesChanged.emit()
         self.statusMessage.emit(self._tr("toast.profile_created", "Profile created"))
 
-    @Slot(str, str)
-    def pickAppForMapping(self, profileName, button):
-        """Open a file picker and bind the chosen app to a button as an
-        'Open Application' action (stored as 'open_app:<path>')."""
+    def _choose_application_path(self):
+        """Show the platform file picker and return the chosen application's
+        normalized path, or '' when the user cancels."""
         from PySide6.QtWidgets import QFileDialog
         if sys.platform == "darwin":
             path, _ = QFileDialog.getOpenFileName(
@@ -2343,9 +2342,32 @@ class Backend(QObject):
                 os.environ.get("ProgramFiles", "C:\\Program Files"),
                 "Executables (*.exe)")
         if not path:
+            return ""
+        return os.path.realpath(path) if sys.platform == "linux" else os.path.normpath(path)
+
+    @Slot(str, str)
+    def pickAppForMapping(self, profileName, button):
+        """Open a file picker and bind the chosen app to a button as an
+        'Open Application' action (stored as 'open_app:<path>')."""
+        path = self._choose_application_path()
+        if not path:
             return
-        path = os.path.realpath(path) if sys.platform == "linux" else os.path.normpath(path)
         self.setProfileMapping(profileName, button, OPEN_APP_PREFIX + path)
+
+    @Slot(int)
+    def pickAppForRingSlot(self, slotIndex):
+        """Open a file picker and store the chosen app in an Actions Ring slot
+        as an 'Open Application' action (stored as 'open_app:<path>')."""
+        if slotIndex < 0:
+            return
+        path = self._choose_application_path()
+        if not path:
+            return
+        slots = list(self.actionsRingSlots)
+        while len(slots) <= slotIndex:
+            slots.append("none")
+        slots[slotIndex] = OPEN_APP_PREFIX + path
+        self.setActionsRingSlots(slots)
 
     @Slot()
     def refreshKnownAppsSilently(self):

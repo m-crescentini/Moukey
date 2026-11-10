@@ -32,8 +32,16 @@ Item {
 
     function actionIndexForId(actionId) {
         var actions = backend.allActions
+        // A stored shortcut / application has no entry of its own in the
+        // list: show it on its picker row instead of falling back to
+        // "Do Nothing".
+        var lookupId = actionId
+        if (typeof actionId === "string") {
+            if (actionId.indexOf("custom:") === 0) lookupId = "__custom__"
+            else if (actionId.indexOf("open_app:") === 0) lookupId = "__open_app__"
+        }
         for (var i = 0; i < actions.length; i++)
-            if (actions[i].id === actionId) return i
+            if (actions[i].id === lookupId) return i
         return 0
     }
 
@@ -404,6 +412,10 @@ Item {
                                     if (aid === "__custom__") {
                                         actionsRingConfig.pendingCustomSlot = index
                                         ringKeyCaptureDialog.open("", "")
+                                        return
+                                    }
+                                    if (aid === "__open_app__") {
+                                        backend.pickAppForRingSlot(index)
                                         return
                                     }
                                     actionsRingConfig.rebuildSlots(index, aid)
