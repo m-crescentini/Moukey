@@ -63,10 +63,34 @@ ApplicationWindow {
         return items
     }
 
-    function openPage(page) {
-        if (root.currentPage === page)
+    // A page Loader that failed to build its page (status Error, or active but
+    // without an item) stays empty for the rest of the session. Rebuild it.
+    function reloadIfBroken(loader) {
+        if (!loader || !loader.active)
             return
+        if (loader.status === Loader.Error || loader.item === null) {
+            console.warn("[Main] page loader '" + loader.source
+                         + "' is empty (status " + loader.status + "); reloading")
+            var src = loader.source
+            loader.source = ""
+            loader.source = src
+        }
+    }
+
+    function pageLoader(page) {
+        return page === 1 ? settingsLoader
+             : page === 3 ? hapticLoader
+             : page === 4 ? ringLoader : null
+    }
+
+    function openPage(page) {
+        // Clicking the page you are already on retries a page that came up empty.
+        if (root.currentPage === page) {
+            reloadIfBroken(pageLoader(page))
+            return
+        }
         root.currentPage = page
+        reloadIfBroken(pageLoader(page))
         // ApplicationWindow is a Window, not an Item — focus lives on its
         // contentItem. Move focus there so the nav item doesn't keep keyboard
         // focus after switching pages.
@@ -296,18 +320,27 @@ ApplicationWindow {
                 deviceFilter: "mouse"
             }
             Loader {                                  // index 1
+                id: settingsLoader
                 active: root.currentPage === 1 || item
                 source: "SettingsPage.qml"
+                onStatusChanged: if (status === Loader.Error)
+                    console.warn("[Main] SettingsPage.qml failed to load")
             }
             DevicePage {                              // index 2 — keyboards
                 id: keyboardPageView
                 deviceFilter: "keyboard"
             }
             Loader {                                  // index 3
+                id: hapticLoader
+                onStatusChanged: if (status === Loader.Error)
+                    console.warn("[Main] HapticPage.qml failed to load")
                 active: (root.currentPage === 3 || item) && backend.hapticSupported
                 source: "HapticPage.qml"
             }
             Loader {                                  // index 4
+                id: ringLoader
+                onStatusChanged: if (status === Loader.Error)
+                    console.warn("[Main] ActionsRingConfig.qml failed to load")
                 active: (root.currentPage === 4 || item) && backend.actionsRingActive
                 source: "ActionsRingConfig.qml"
             }

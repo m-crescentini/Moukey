@@ -30,5 +30,20 @@ class DevicePagePickerTests(unittest.TestCase):
             )
 
 
+class MainPageLoaderTests(unittest.TestCase):
+    """A page Loader that came up empty must be rebuilt instead of staying blank."""
+
+    MAIN = (ROOT / "ui" / "qml" / "Main.qml").read_text(encoding="utf-8")
+
+    def test_page_loaders_are_named_and_report_errors(self):
+        for name in ("settingsLoader", "hapticLoader", "ringLoader"):
+            self.assertIn("id: %s" % name, self.MAIN)
+        self.assertGreaterEqual(self.MAIN.count("Loader.Error"), 4)
+
+    def test_opening_a_page_retries_a_broken_loader(self):
+        body = self.MAIN.split("function openPage(page)", 1)[1].split("color: theme.bg", 1)[0]
+        self.assertGreaterEqual(body.count("reloadIfBroken(pageLoader(page))"), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
