@@ -2451,10 +2451,13 @@ class Backend(QObject):
                  if (getattr(d, "device_type", "mouse") or "mouse") == deviceType),
                 None,
             )
-            device_buttons = set(
+            # Same augmentation as ``_effective_supported_buttons``: the tap and
+            # swipe keys of the Gesture Swipe editor are not part of a device's
+            # own button layout, but the page must still read them back.
+            device_buttons = _augment_with_button_gesture_keys(set(
                 getattr(device, "supported_buttons", None)
                 or PROFILE_BUTTON_NAMES.keys()
-            )
+            ))
         else:
             device_buttons = set(
                 self._effective_supported_buttons or PROFILE_BUTTON_NAMES.keys()

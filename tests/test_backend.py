@@ -7,7 +7,7 @@ import tempfile
 import unittest
 import unittest.mock
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from core.config import DEFAULT_CONFIG
 from core.updater import UpdateCheckState
@@ -1682,6 +1682,37 @@ class BackendActionsRingOpenAppTests(unittest.TestCase):
 
         self.assertEqual(backend.actionsRingSlots, before)
         save_mock.assert_not_called()
+
+
+class BackendGestureTapReadbackTests(unittest.TestCase):
+    """The Gesture Swipe tap action is saved under ``<button>_tap``, which is
+    not part of a device's own button layout; the device page must still read
+    it back or it shows "Do Nothing" for an action that is set and working."""
+
+    def test_page_mappings_include_the_saved_tap_action(self):
+        device = SimpleNamespace(
+            key="mx_master_4", display_name="MX Master 4",
+            dpi_min=200, dpi_max=8000, ui_layout="mx_master_4",
+            device_type="mouse",
+            supported_buttons=("middle", "gesture", "gesture_left"),
+        )
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        cfg["profiles"]["default"]["mappings"].update(
+            gesture="gesture_swipe", gesture_tap="close_tab")
+        with (
+            patch("ui.backend.load_config", return_value=cfg),
+            patch("ui.backend.save_config"),
+            patch("ui.backend.supports_login_startup", return_value=False),
+        ):
+            backend = Backend(engine=_FakeEngine(
+                device_connected=True, connected_device=device,
+                connected_devices=[device]))
+
+        state = {m["key"]: m for m in backend.getProfileMappings("default", "mouse")}
+
+        self.assertEqual(state["gesture_tap"]["actionId"], "close_tab")
+        self.assertEqual(state["gesture_tap"]["actionLabel"], "Close Tab (Ctrl+W)")
+        self.assertIn("middle_tap", state)
 
 
 class BackendRingVersusSwipeTests(unittest.TestCase):

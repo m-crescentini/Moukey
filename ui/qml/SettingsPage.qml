@@ -1639,6 +1639,58 @@ Item {
                 }
             }
 
+            Item { width: 1; height: 12 }
+
+            // ── Debug mode ────────────────────────────────────────
+            Rectangle {
+                width: parent.width - 72
+                anchors.horizontalCenter: parent.horizontalCenter
+                height: debugModeRow.implicitHeight + 24
+                radius: Theme.radius
+                color: settingsPage.theme.bgCard
+                border.width: 1
+                border.color: settingsPage.theme.border
+
+                RowLayout {
+                    id: debugModeRow
+                    anchors {
+                        left: parent.left; right: parent.right
+                        verticalCenter: parent.verticalCenter
+                        leftMargin: 16; rightMargin: 16
+                    }
+                    spacing: 12
+
+                    Column {
+                        Layout.fillWidth: true
+                        spacing: 3
+
+                        Text {
+                            text: s["scroll.debug_mode"] || "Debug mode"
+                            font { family: uiState.fontFamily; pixelSize: 13 }
+                            color: settingsPage.theme.textPrimary
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: s["scroll.debug_mode_desc"]
+                                  || "Shows the debug panel (event log, record and clear) under the device image on the mouse and keyboard pages. Also available from the tray menu."
+                            font { family: uiState.fontFamily; pixelSize: 11 }
+                            color: settingsPage.theme.textSecondary
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    Switch {
+                        id: debugModeSwitch
+                        checked: backend.debugMode
+                        focusPolicy: Qt.StrongFocus
+                        Material.accent: settingsPage.theme.accent
+                        Accessible.name: s["scroll.debug_mode"] || "Debug mode"
+                        onToggled: backend.setDebugMode(checked)
+                    }
+                }
+            }
+
             Item { width: 1; height: 24 }
         }
     }
