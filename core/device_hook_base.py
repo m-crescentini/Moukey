@@ -12,6 +12,7 @@ except Exception:
     HidGestureListener = None
 
 from core.gesture_recognizer import GestureRecognizer
+from core.latency import LatencyMonitor
 from core.device_hook_types import HidRuntimeState, DeviceEvent, format_debug_details
 
 # Swipe direction -> event, per event family. The Gesture button (thumb)
@@ -48,6 +49,9 @@ class BaseDeviceHook:
         self._gesture_callback = None
         self._status_callback = None
         self.debug_mode = False
+        # Timing of the hook callback, the event queue and the actions; only
+        # fed while debug mode is on.
+        self.latency = LatencyMonitor()
         self.invert_vscroll = False
         self.invert_hscroll = False
         self._gesture_active = False
@@ -527,6 +531,11 @@ class BaseDeviceHook:
             except Exception:
                 pass
 
+    def _record_latency(self, name, ms, detail=None):
+        """Store a timing sample and log slow ones / periodic summaries."""
+        for line in self.latency.record(name, ms, detail):
+            self._emit_debug(line)
+
     def _emit_status(self, message):
         if self._status_callback:
             try:
@@ -542,6 +551,13 @@ class BaseDeviceHook:
                 pass
 
     def _dispatch(self, event):
+        timing = self.debug_mode
+        if timing:
+            started = time.perf_counter()
+            self._record_latency(
+                "queue", (time.time() - event.timestamp) * 1000.0,
+                lambda: event.event_type,
+            )
         callbacks = self._callbacks.get(event.event_type, [])
         self._emit_debug(
             f"Dispatch {event.event_type}"
@@ -569,6 +585,11 @@ class BaseDeviceHook:
                 callback(event)
             except Exception as exc:
                 print(f"[DeviceHook] callback error: {exc}")
+        if timing and callbacks:
+            self._record_latency(
+                "action", (time.perf_counter() - started) * 1000.0,
+                lambda: event.event_type,
+            )
 
     def _hid_gesture_available(self):
         return self._hid_gesture is not None and self._device_connected

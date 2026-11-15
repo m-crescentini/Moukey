@@ -23,6 +23,7 @@ from core.config import (
     get_icon_for_exe, get_profile_crown_smooth, set_profile_crown_smooth,
     HAPTIC_ELIGIBLE_ACTIONS, set_action_haptic, set_button_haptic,
     GESTURE_SWIPE_ACTION, SWIPE_CAPABLE_BUTTONS, GESTURE_SWIPE_DIRECTIONS,
+    _default_actions_ring_slots,
 )
 from core.locales import LANGUAGE_PREFERENCES
 from core import app_catalog
@@ -759,19 +760,113 @@ class Backend(QObject):
     @Property(list, notify=mappingsChanged)
     def actionsRingSlots(self):
         if self.actionsRingUseGlobal:
-            return list(self._cfg.get("settings", {}).get("actions_ring_slots", []))
-        return list(self._ring_slots_target_mappings().get("actions_ring_slots", []))
+            slots = self._cfg.get("settings", {}).get("actions_ring_slots")
+        else:
+            slots = self._ring_slots_target_mappings().get("actions_ring_slots")
+        if slots is None:
+            return list(_default_actions_ring_slots())
+        return list(slots)
+
+    @Property(list, notify=mappingsChanged)
+    def actionsRingSlotLabels(self):
+        if self.actionsRingUseGlobal:
+            return list(self._cfg.get("settings", {}).get(
+                "actions_ring_slot_labels", []))
+        return list(self._ring_slots_target_mappings().get(
+            "actions_ring_slot_labels", []))
 
     @Slot(list)
     def setActionsRingSlots(self, slots):
+        slots = list(slots)
         if self.actionsRingUseGlobal:
-            self._cfg.setdefault("settings", {})["actions_ring_slots"] = list(slots)
+            target = self._cfg.setdefault("settings", {})
         else:
-            self._ring_slots_target_mappings()["actions_ring_slots"] = list(slots)
+            target = self._ring_slots_target_mappings()
+        labels = list(target.get("actions_ring_slot_labels", []))[:len(slots)]
+        labels.extend([""] * (len(slots) - len(labels)))
+        for index, action_id in enumerate(slots):
+            if not str(action_id).startswith("custom:"):
+                labels[index] = ""
+        target["actions_ring_slots"] = slots
+        target["actions_ring_slot_labels"] = labels
         save_config(self._cfg)
         self.mappingsChanged.emit()
         if self._engine:
             self._engine.reload_mappings()
+
+    @Slot(int, str, str)
+    def setActionsRingSlot(self, index, action_id, custom_label):
+        """Update one ring slot and its optional user-facing label atomically."""
+        if index < 0:
+            return
+        target = (
+            self._cfg.setdefault("settings", {})
+            if self.actionsRingUseGlobal
+            else self._ring_slots_target_mappings()
+        )
+        slots = list(target.get("actions_ring_slots", []))
+        labels = list(target.get("actions_ring_slot_labels", []))
+        while len(slots) <= index:
+            slots.append("none")
+        while len(labels) < len(slots):
+            labels.append("")
+        action_id = str(action_id or "none")
+        slots[index] = action_id
+        labels[index] = (
+            str(custom_label or "").strip()[:40]
+            if action_id.startswith("custom:") else ""
+        )
+        target["actions_ring_slots"] = slots
+        target["actions_ring_slot_labels"] = labels
+        save_config(self._cfg)
+        self.mappingsChanged.emit()
+        if self._engine:
+            self._engine.reload_mappings()
+
+    @Property(int, notify=mappingsChanged)
+    def actionsRingSlotCount(self):
+        slots = self.actionsRingSlots
+        return len(slots) if slots else 4
+
+    @Slot(int)
+    def setActionsRingSlotCount(self, count):
+        count = max(2, min(16, int(count)))
+        current = list(self.actionsRingSlots)
+        if len(current) == count:
+            return
+        if len(current) < count:
+            default_slots = _default_actions_ring_slots()
+            while len(current) < count:
+                idx = len(current)
+                if idx < len(default_slots):
+                    current.append(default_slots[idx])
+                else:
+                    current.append("none")
+        else:
+            current = current[:count]
+        self.setActionsRingSlots(current)
+
+    def _active_ring_slot_labels(self, slots):
+        """Return labels for the same effective slot list selected by Engine."""
+        settings = self._cfg.get("settings", {})
+        if settings.get("actions_ring_use_global", True):
+            labels = settings.get("actions_ring_slot_labels", [])
+        else:
+            profile_name = self._cfg.get("active_profile", "default")
+            mappings = (
+                self._cfg.get("profiles", {})
+                .get(profile_name, {})
+                .get("mappings", {})
+            )
+            labels = (
+                mappings.get("actions_ring_slot_labels", [])
+                if mappings.get("actions_ring_slots")
+                else settings.get("actions_ring_slot_labels", [])
+            )
+        return [
+            str(labels[i]).strip() if i < len(labels) else ""
+            for i in range(len(slots))
+        ]
 
     @Property(bool, notify=hidFeaturesReadyChanged)
     def hapticSupported(self):
@@ -2269,6 +2364,15 @@ class Backend(QObject):
         self.debugEventsEnabledChanged.emit()
 
     @Slot()
+    def logLatencySummary(self):
+        """Write the input-latency summary into the debug log."""
+        lines = []
+        if self._engine and hasattr(self._engine, "latency_summary"):
+            lines = self._engine.latency_summary()
+        for line in lines or ["Latency: not available"]:
+            self._append_debug_line(line)
+
+    @Slot()
     def clearDebugLog(self):
         self._debug_lines = []
         self.debugLogChanged.emit()
@@ -2732,8 +2836,15 @@ class Backend(QObject):
         """Called from hook/timer thread — posts to Qt main thread."""
         from core.key_simulator import ACTIONS
         from ui.actions_ring_overlay import _resolve_ring_label
-        labels = [_resolve_ring_label(s, ACTIONS.get(s, {}).get("label", s))
-                  for s in slots]
+        custom_labels = self._active_ring_slot_labels(slots)
+        labels = [
+            _resolve_ring_label(
+                action_id,
+                ACTIONS.get(action_id, {}).get("label", action_id),
+                custom_labels[index],
+            )
+            for index, action_id in enumerate(slots)
+        ]
         self._showRingRequest.emit(labels, bool(interactive))
 
     def _onEngineHideRing(self):

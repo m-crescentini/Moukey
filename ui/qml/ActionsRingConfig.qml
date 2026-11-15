@@ -45,15 +45,19 @@ Item {
         return 0
     }
 
-    function rebuildSlots(slotIndex, newActionId) {
-        var current = backend.actionsRingSlots
-        var slots = []
-        for (var i = 0; i < current.length; i++)
-            slots.push(current[i])
-        while (slots.length < 4)
-            slots.push("none")
-        slots[slotIndex] = newActionId
-        backend.setActionsRingSlots(slots)
+    function getSectorDirectionName(slotIndex, totalSlots) {
+        if (totalSlots === 4) {
+            var dir4 = ["Top", "Right", "Bottom", "Left"]
+            return slotIndex < dir4.length ? dir4[slotIndex] : ""
+        } else if (totalSlots === 8) {
+            var dir8 = ["Top", "Top-Right", "Right", "Bottom-Right", "Bottom", "Bottom-Left", "Left", "Top-Left"]
+            return slotIndex < dir8.length ? dir8[slotIndex] : ""
+        }
+        return ""
+    }
+
+    function rebuildSlot(slotIndex, newActionId, customLabel) {
+        backend.setActionsRingSlot(slotIndex, newActionId, customLabel || "")
     }
 
     ScrollView {
@@ -327,6 +331,71 @@ Item {
 
             Item { width: 1; height: 16 }
 
+            // ── Ring Layout Card (4 vs 8 Sectors) ────────────────────
+            Rectangle {
+                width: parent.width - 72
+                anchors.horizontalCenter: parent.horizontalCenter
+                height: ringLayoutContent.implicitHeight + 40
+                radius: Theme.radius
+                color: actionsRingConfig.theme.bgCard
+                border.width: 1
+                border.color: actionsRingConfig.theme.border
+
+                Column {
+                    id: ringLayoutContent
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 20
+                    }
+                    spacing: 12
+
+                    Row {
+                        width: parent.width
+
+                        Text {
+                            text: s["ring.layout"] || "Ring Layout"
+                            font { family: uiState.fontFamily; pixelSize: 16; bold: true }
+                            color: actionsRingConfig.theme.textPrimary
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - layoutButtonsRow.width
+                        }
+
+                        Row {
+                            id: layoutButtonsRow
+                            spacing: 8
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Button {
+                                text: s["ring.sectors_4"] || "4 Sectors"
+                                highlighted: backend.actionsRingSlotCount === 4
+                                Material.accent: actionsRingConfig.theme.accent
+                                onClicked: backend.setActionsRingSlotCount(4)
+                            }
+
+                            Button {
+                                text: s["ring.sectors_8"] || "8 Sectors"
+                                highlighted: backend.actionsRingSlotCount === 8
+                                Material.accent: actionsRingConfig.theme.accent
+                                onClicked: backend.setActionsRingSlotCount(8)
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: s["ring.layout_desc"]
+                              || "Select the number of action sectors in the radial menu"
+                        font { family: uiState.fontFamily; pixelSize: 12 }
+                        color: actionsRingConfig.theme.textSecondary
+                        wrapMode: Text.WordWrap
+                        width: parent.width
+                    }
+                }
+            }
+
+            Item { width: 1; height: 16 }
+
             // ── Ring Slot Editor Card ────────────────────────────────
             Rectangle {
                 width: parent.width - 72
@@ -370,15 +439,24 @@ Item {
                     }
 
                     Repeater {
-                        model: 4
+                        model: backend.actionsRingSlotCount
 
                         delegate: RowLayout {
+                            id: slotRow
+                            required property int index
+                            readonly property int slotIndex: index
                             width: slotsContent.width
                             spacing: 12
 
                             Text {
-                                text: (s["ring.slot_prefix"] || "Slot ") + (index + 1)
-                                Layout.preferredWidth: 60
+                                text: {
+                                    var dir = actionsRingConfig.getSectorDirectionName(
+                                                  slotRow.slotIndex, backend.actionsRingSlotCount)
+                                    var prefix = (s["ring.slot_prefix"] || "Slot ")
+                                                 + (slotRow.slotIndex + 1)
+                                    return dir ? prefix + " (" + dir + ")" : prefix
+                                }
+                                Layout.preferredWidth: 120
                                 font {
                                     family: uiState.fontFamily
                                     pixelSize: 12
@@ -396,29 +474,40 @@ Item {
                                 font { family: uiState.fontFamily; pixelSize: 11 }
                                 currentIndex: {
                                     var slots = backend.actionsRingSlots
-                                    var aid = (slots && index < slots.length)
-                                              ? slots[index] : "none"
+                                    var aid = (slots && slotRow.slotIndex < slots.length)
+                                              ? slots[slotRow.slotIndex] : "none"
                                     return actionsRingConfig.actionIndexForId(aid)
                                 }
                                 displayText: {
                                     var slots = backend.actionsRingSlots
-                                    var aid = (slots && index < slots.length)
-                                              ? slots[index] : "none"
+                                    var labels = backend.actionsRingSlotLabels
+                                    var aid = (slots && slotRow.slotIndex < slots.length)
+                                              ? slots[slotRow.slotIndex] : "none"
+                                    if (aid.startsWith("custom:")
+                                            && labels
+                                            && slotRow.slotIndex < labels.length
+                                            && labels[slotRow.slotIndex])
+                                        return labels[slotRow.slotIndex]
                                     return (lm.strings,
                                             lm.trAction(backend.actionLabelFor(aid)))
                                 }
                                 onActivated: function(idx) {
                                     var aid = backend.allActions[idx].id
                                     if (aid === "__custom__") {
-                                        actionsRingConfig.pendingCustomSlot = index
-                                        ringKeyCaptureDialog.open("", "")
+                                        actionsRingConfig.pendingCustomSlot = slotRow.slotIndex
+                                        var labels = backend.actionsRingSlotLabels
+                                        var initialLabel = labels
+                                                && slotRow.slotIndex < labels.length
+                                                ? labels[slotRow.slotIndex] : ""
+                                        ringKeyCaptureDialog.open("", "", initialLabel)
                                         return
                                     }
                                     if (aid === "__open_app__") {
-                                        backend.pickAppForRingSlot(index)
+                                        backend.pickAppForRingSlot(slotRow.slotIndex)
                                         return
                                     }
-                                    actionsRingConfig.rebuildSlots(index, aid)
+                                    actionsRingConfig.rebuildSlot(
+                                                slotRow.slotIndex, aid, "")
                                 }
                             }
                         }
@@ -433,11 +522,13 @@ Item {
     // Key capture dialog for custom-shortcut ring slots
     KeyCaptureDialog {
         id: ringKeyCaptureDialog
+        showCustomLabel: true
         onCaptured: function(comboString) {
             if (actionsRingConfig.pendingCustomSlot >= 0) {
-                actionsRingConfig.rebuildSlots(
+                actionsRingConfig.rebuildSlot(
                     actionsRingConfig.pendingCustomSlot,
-                    "custom:" + comboString)
+                    "custom:" + comboString,
+                    ringKeyCaptureDialog.customLabel)
                 actionsRingConfig.pendingCustomSlot = -1
             }
         }
