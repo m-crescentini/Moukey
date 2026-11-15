@@ -56,15 +56,8 @@ Item {
         return ""
     }
 
-    function rebuildSlots(slotIndex, newActionId) {
-        var current = backend.actionsRingSlots
-        var slots = []
-        for (var i = 0; i < current.length; i++)
-            slots.push(current[i])
-        while (slots.length <= slotIndex)
-            slots.push("none")
-        slots[slotIndex] = newActionId
-        backend.setActionsRingSlots(slots)
+    function rebuildSlot(slotIndex, newActionId, customLabel) {
+        backend.setActionsRingSlot(slotIndex, newActionId, customLabel || "")
     }
 
     ScrollView {
@@ -449,13 +442,18 @@ Item {
                         model: backend.actionsRingSlotCount
 
                         delegate: RowLayout {
+                            id: slotRow
+                            required property int index
+                            readonly property int slotIndex: index
                             width: slotsContent.width
                             spacing: 12
 
                             Text {
                                 text: {
-                                    var dir = actionsRingConfig.getSectorDirectionName(index, backend.actionsRingSlotCount)
-                                    var prefix = (s["ring.slot_prefix"] || "Slot ") + (index + 1)
+                                    var dir = actionsRingConfig.getSectorDirectionName(
+                                                  slotRow.slotIndex, backend.actionsRingSlotCount)
+                                    var prefix = (s["ring.slot_prefix"] || "Slot ")
+                                                 + (slotRow.slotIndex + 1)
                                     return dir ? prefix + " (" + dir + ")" : prefix
                                 }
                                 Layout.preferredWidth: 120
@@ -476,29 +474,40 @@ Item {
                                 font { family: uiState.fontFamily; pixelSize: 11 }
                                 currentIndex: {
                                     var slots = backend.actionsRingSlots
-                                    var aid = (slots && index < slots.length)
-                                              ? slots[index] : "none"
+                                    var aid = (slots && slotRow.slotIndex < slots.length)
+                                              ? slots[slotRow.slotIndex] : "none"
                                     return actionsRingConfig.actionIndexForId(aid)
                                 }
                                 displayText: {
                                     var slots = backend.actionsRingSlots
-                                    var aid = (slots && index < slots.length)
-                                              ? slots[index] : "none"
+                                    var labels = backend.actionsRingSlotLabels
+                                    var aid = (slots && slotRow.slotIndex < slots.length)
+                                              ? slots[slotRow.slotIndex] : "none"
+                                    if (aid.startsWith("custom:")
+                                            && labels
+                                            && slotRow.slotIndex < labels.length
+                                            && labels[slotRow.slotIndex])
+                                        return labels[slotRow.slotIndex]
                                     return (lm.strings,
                                             lm.trAction(backend.actionLabelFor(aid)))
                                 }
                                 onActivated: function(idx) {
                                     var aid = backend.allActions[idx].id
                                     if (aid === "__custom__") {
-                                        actionsRingConfig.pendingCustomSlot = index
-                                        ringKeyCaptureDialog.open("", "")
+                                        actionsRingConfig.pendingCustomSlot = slotRow.slotIndex
+                                        var labels = backend.actionsRingSlotLabels
+                                        var initialLabel = labels
+                                                && slotRow.slotIndex < labels.length
+                                                ? labels[slotRow.slotIndex] : ""
+                                        ringKeyCaptureDialog.open("", "", initialLabel)
                                         return
                                     }
                                     if (aid === "__open_app__") {
-                                        backend.pickAppForRingSlot(index)
+                                        backend.pickAppForRingSlot(slotRow.slotIndex)
                                         return
                                     }
-                                    actionsRingConfig.rebuildSlots(index, aid)
+                                    actionsRingConfig.rebuildSlot(
+                                                slotRow.slotIndex, aid, "")
                                 }
                             }
                         }
@@ -513,11 +522,13 @@ Item {
     // Key capture dialog for custom-shortcut ring slots
     KeyCaptureDialog {
         id: ringKeyCaptureDialog
+        showCustomLabel: true
         onCaptured: function(comboString) {
             if (actionsRingConfig.pendingCustomSlot >= 0) {
-                actionsRingConfig.rebuildSlots(
+                actionsRingConfig.rebuildSlot(
                     actionsRingConfig.pendingCustomSlot,
-                    "custom:" + comboString)
+                    "custom:" + comboString,
+                    ringKeyCaptureDialog.customLabel)
                 actionsRingConfig.pendingCustomSlot = -1
             }
         }
