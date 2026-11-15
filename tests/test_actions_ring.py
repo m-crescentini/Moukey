@@ -245,6 +245,18 @@ class ControllerStateMachineTests(unittest.TestCase):
 
         self.execute_cb.assert_called_once_with("action_3")
 
+    def test_eight_slot_ring_executes_every_sector(self):
+        """An 8-sector ring (4/8 layout choice) runs the slot of each sector,
+        including the last one."""
+        slots = [f"action_{i}" for i in range(8)]
+        for sector in range(8):
+            with self.subTest(sector=sector):
+                ctrl = self._make_controller(slots=slots)
+                ctrl.on_button_down()
+                time.sleep(self.HOLD_MS / 1000.0 + 0.100)
+                ctrl.on_button_up(sector_override=sector)
+                self.execute_cb.assert_called_once_with(f"action_{sector}")
+
     # -- set_current_sector ------------------------------------------------
 
     def test_set_current_sector_updates_sector(self):
