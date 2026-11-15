@@ -376,6 +376,7 @@ class DeviceHook(BaseDeviceHook):
     }
 
     def _low_level_handler(self, nCode, wParam, lParam):
+        started = time.perf_counter() if self.debug_mode else None
         try:
             return self._low_level_handler_inner(nCode, wParam, lParam)
         except Exception as exc:
@@ -387,6 +388,12 @@ class DeviceHook(BaseDeviceHook):
             except Exception:
                 pass
             return CallNextHookEx(self._hook, nCode, wParam, lParam)
+        finally:
+            if started is not None:
+                self._record_latency(
+                    "hook", (time.perf_counter() - started) * 1000.0,
+                    lambda: self._WM_NAMES.get(wParam, f"0x{wParam:04X}"),
+                )
 
     def _low_level_handler_inner(self, nCode, wParam, lParam):
         if nCode == HC_ACTION:

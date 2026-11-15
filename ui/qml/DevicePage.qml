@@ -2421,6 +2421,31 @@ Item {
                                 }
 
                                 Rectangle {
+                                    Layout.preferredWidth: latencyText.implicitWidth + 20
+                                    Layout.preferredHeight: 28
+                                    radius: 8
+                                    color: latencyMa.containsMouse
+                                           ? Qt.rgba(1, 1, 1, 0.08)
+                                           : Qt.rgba(1, 1, 1, 0.04)
+
+                                    Text {
+                                        id: latencyText
+                                        anchors.centerIn: parent
+                                        text: s["device.latency"] || "Latency"
+                                        font { family: uiState.fontFamily; pixelSize: 11; bold: true }
+                                        color: theme.textPrimary
+                                    }
+
+                                    MouseArea {
+                                        id: latencyMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: backend.logLatencySummary()
+                                    }
+                                }
+
+                                Rectangle {
                                     Layout.preferredWidth: clearText.implicitWidth + 20
                                     Layout.preferredHeight: 28
                                     radius: 8

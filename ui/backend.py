@@ -2269,6 +2269,15 @@ class Backend(QObject):
         self.debugEventsEnabledChanged.emit()
 
     @Slot()
+    def logLatencySummary(self):
+        """Write the input-latency summary into the debug log."""
+        lines = []
+        if self._engine and hasattr(self._engine, "latency_summary"):
+            lines = self._engine.latency_summary()
+        for line in lines or ["Latency: not available"]:
+            self._append_debug_line(line)
+
+    @Slot()
     def clearDebugLog(self):
         self._debug_lines = []
         self.debugLogChanged.emit()

@@ -1297,10 +1297,19 @@ class Engine:
         self._debug_events_enabled = enabled
         self.hook.debug_mode = enabled
         if enabled:
+            # Fresh numbers for each debug session.
+            latency = getattr(self.hook, "latency", None)
+            if latency is not None:
+                latency.reset()
             self._emit_debug(f"Debug enabled on profile {self._current_profile}")
             self._emit_mapping_snapshot(
                 "Current mappings", get_active_mappings(self.cfg)
             )
+
+    def latency_summary(self):
+        """Summary lines of the input-latency measurements (see core.latency)."""
+        latency = getattr(self.hook, "latency", None)
+        return latency.summary_lines() if latency is not None else []
 
     def set_debug_events_enabled(self, enabled):
         self._debug_events_enabled = bool(enabled)
