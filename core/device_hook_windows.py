@@ -378,6 +378,14 @@ class DeviceHook(BaseDeviceHook):
     def _low_level_handler(self, nCode, wParam, lParam):
         started = time.perf_counter() if self.debug_mode else None
         try:
+            # Fast path: this hook sees every pointer motion (hundreds to a
+            # thousand a second) and the full handler does nothing for a move
+            # unless a button gesture is being tracked. Pass it straight on,
+            # keeping the watchdog's proof-of-life stamp.
+            if (wParam == WM_MOUSEMOVE and nCode == HC_ACTION
+                    and self._button_gesture_active_owner is None):
+                self._last_hook_event_at = time.monotonic()
+                return CallNextHookEx(self._hook, nCode, wParam, lParam)
             return self._low_level_handler_inner(nCode, wParam, lParam)
         except Exception as exc:
             try:
