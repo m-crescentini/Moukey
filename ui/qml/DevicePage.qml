@@ -76,6 +76,11 @@ Item {
         }
     }
 
+    // The debug log this page shows: the keyboard page keeps keyboard traffic,
+    // the mouse page keeps pointer, button and gesture traffic.
+    readonly property string debugPageLog:
+        deviceFilter === "keyboard" ? backend.keyboardDebugLog : backend.debugLog
+
     // ── Profile state ─────────────────────────────────────────
     property string selectedProfile: backend.activeProfile
     property string selectedProfileLabel: ""
@@ -2414,6 +2419,7 @@ Item {
                                 }
 
                                 Switch {
+                                    visible: deviceFilter !== "keyboard"
                                     checked: backend.recordMode
                                     text: checked ? s["device.rec"] : s["device.record"]
                                     Material.accent: "#e46f4e"
@@ -2441,7 +2447,7 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: backend.logLatencySummary()
+                                        onClicked: backend.logLatencySummaryFor(deviceFilter)
                                     }
                                 }
 
@@ -2466,11 +2472,12 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: backend.clearDebugLog()
+                                        onClicked: backend.clearDebugLogFor(deviceFilter)
                                     }
                                 }
 
                                 Rectangle {
+                                    visible: deviceFilter !== "keyboard"
                                     Layout.preferredWidth: clearRecText.implicitWidth + 20
                                     Layout.preferredHeight: 28
                                     radius: 8
@@ -2535,6 +2542,7 @@ Item {
                                 color: Qt.rgba(1, 1, 1, 0.03)
                                 border.width: 1
                                 border.color: theme.border
+                                visible: deviceFilter !== "keyboard"
                                 height: monitorCol.implicitHeight + 20
 
                                 Column {
@@ -2620,13 +2628,15 @@ Item {
 
                                     TextArea {
                                         id: debugLogArea
-                                        text: backend.debugLog.length
-                                              ? backend.debugLog
-                                              : s["device.debug_placeholder"]
+                                        text: debugPageLog.length
+                                              ? debugPageLog
+                                              : (deviceFilter === "keyboard"
+                                                 ? s["device.debug_placeholder_keyboard"]
+                                                 : s["device.debug_placeholder"])
                                         readOnly: true
                                         wrapMode: TextEdit.NoWrap
                                         selectByMouse: true
-                                        color: backend.debugLog.length
+                                        color: debugPageLog.length
                                                ? theme.textPrimary
                                                : theme.textSecondary
                                         font.pixelSize: 11

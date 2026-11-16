@@ -149,6 +149,7 @@ _TRANSLATIONS = {
         "device.move_seen": "Move Seen",
         "device.no_move": "No Move",
         "device.debug_placeholder": "Turn on debug mode, then press buttons or use the gesture button.",
+        "device.debug_placeholder_keyboard": "Turn on debug mode, then press keyboard keys. Only keys that Moukey diverts (the ones you have remapped) appear here; every other key is handled by Windows and cannot be logged.",
         "device.gesture_placeholder": "Turn on Record and perform a few gesture attempts.",
 
         # Mouse page — add app dialog
@@ -472,6 +473,7 @@ _TRANSLATIONS = {
         "device.move_seen": "\u68c0\u6d4b\u5230\u79fb\u52a8",
         "device.no_move": "\u65e0\u79fb\u52a8",
         "device.debug_placeholder": "\u5f00\u542f\u8c03\u8bd5\u6a21\u5f0f\uff0c\u7136\u540e\u6309\u4e0b\u6309\u952e\u6216\u4f7f\u7528\u624b\u52bf\u6309\u9215\u3002",
+        "device.debug_placeholder_keyboard": "\u5f00\u542f\u8c03\u8bd5\u6a21\u5f0f\u540e\u6309\u4e0b\u952e\u76d8\u6309\u952e\u3002\u4ec5\u663e\u793a Moukey \u63a5\u7ba1\u7684\u6309\u952e\uff08\u5df2\u91cd\u65b0\u6620\u5c04\u7684\u6309\u952e\uff09\uff1b\u5176\u4ed6\u6309\u952e\u7531 Windows \u5904\u7406\uff0c\u65e0\u6cd5\u8bb0\u5f55\u3002",
         "device.gesture_placeholder": "\u5f00\u542f\u5f55\u5236\u5e76\u8fdb\u884c\u51e0\u6b21\u624b\u52bf\u5c1d\u8bd5\u3002",
 
         "device.add_app_dialog.title": "\u6dfb\u52a0\u5e94\u7528\u914d\u7f6e",
@@ -785,6 +787,7 @@ _TRANSLATIONS = {
         "device.move_seen": "\u5075\u6e2c\u5230\u79fb\u52d5",
         "device.no_move": "\u7121\u79fb\u52d5",
         "device.debug_placeholder": "\u958b\u555f\u9664\u932f\u6a21\u5f0f\uff0c\u7136\u5f8c\u6309\u4e0b\u6309\u9375\u6216\u4f7f\u7528\u624b\u52e2\u6309\u9215\u3002",
+        "device.debug_placeholder_keyboard": "\u958b\u555f\u9664\u932f\u6a21\u5f0f\u5f8c\u6309\u4e0b\u9375\u76e4\u6309\u9375\u3002\u50c5\u986f\u793a Moukey \u63a5\u7ba1\u7684\u6309\u9375\uff08\u5df2\u91cd\u65b0\u6620\u5c04\u7684\u6309\u9375\uff09\uff1b\u5176\u4ed6\u6309\u9375\u7531 Windows \u8655\u7406\uff0c\u7121\u6cd5\u8a18\u9304\u3002",
         "device.gesture_placeholder": "\u958b\u555f\u9304\u88fd\u4e26\u9032\u884c\u5e7e\u6b21\u624b\u52e2\u5617\u8a66\u3002",
 
         "device.add_app_dialog.title": "\u65b0\u589e\u61c9\u7528\u7a0b\u5f0f\u8a2d\u5b9a\u6a94",

@@ -617,6 +617,7 @@ class BaseDeviceHook:
 
     def _on_hid_keyboard_key(self, button_key):
         # Single-fire on press; the button key doubles as the DeviceEvent type.
+        self._emit_debug(f"Keyboard key {button_key} pressed (diverted by Moukey)")
         self._dispatch(DeviceEvent(button_key))
 
     def _start_hid_listener(self):

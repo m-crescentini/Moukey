@@ -343,6 +343,7 @@ class Engine:
                 keyboard_keys[cid] = "kbd_backlight_up"
 
         if hasattr(self.hook, "divert_keyboard_keys"):
+            self._emit_keyboard_divert_snapshot(keyboard_keys)
             self.hook.divert_keyboard_keys = keyboard_keys
 
         # Actions Ring controller — create/recreate on every hook setup so
@@ -1343,6 +1344,19 @@ class Engine:
             except Exception:
                 pass
 
+    def _emit_keyboard_divert_snapshot(self, keyboard_keys):
+        """Debug line naming the keyboard keys Moukey takes over; every other
+        key stays with Windows (and is therefore invisible to this log)."""
+        if not self._debug_events_enabled:
+            return
+        names = sorted(keyboard_keys.values())
+        if names:
+            self._emit_debug(
+                "Keyboard keys diverted by Moukey: " + ", ".join(names))
+        else:
+            self._emit_debug(
+                "Keyboard keys diverted by Moukey: none (all keys are native)")
+
     def _emit_mapping_snapshot(self, prefix, mappings):
         if not self._debug_events_enabled:
             return
@@ -1791,6 +1805,8 @@ class Engine:
         re-enable key. When it ends OFF (light theme) the backlight-up key is
         diverted so the next press re-enables it; when ON it's passthrough."""
         enabled = bool(enabled)
+        self._emit_debug(
+            f"Keyboard backlight -> {'on' if enabled else 'off'}")
         self._backlight_state = (enabled, int(brightness))
         hg = self.hook._hid_gesture
         applied = False

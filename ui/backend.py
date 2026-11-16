@@ -27,6 +27,7 @@ from core.config import (
 )
 from core.locales import LANGUAGE_PREFERENCES
 from core import app_catalog
+from core.debug_log import debug_message_source
 from core.device_layouts import get_device_layout, get_manual_layout_choices
 from core.key_capture import create_super_key_guard
 from core.logi_device_catalog import LOGI_DEVICE_LAYOUTS
@@ -309,6 +310,7 @@ class Backend(QObject):
         self._system_dark = False       # last OS dark-mode state (for backlight)
         self._hid_features_ready = False
         self._debug_lines = []
+        self._keyboard_debug_lines = []
         self._debug_events_enabled = bool(
             self._cfg.get("settings", {}).get("debug_mode", False)
         )
@@ -1449,7 +1451,13 @@ class Backend(QObject):
 
     @Property(str, notify=debugLogChanged)
     def debugLog(self):
+        """Mouse debug log (pointer, buttons, gestures and general lines)."""
         return "\n".join(self._debug_lines)
+
+    @Property(str, notify=debugLogChanged)
+    def keyboardDebugLog(self):
+        """Keyboard debug log (diverted keys, key presses, crown, backlight)."""
+        return "\n".join(self._keyboard_debug_lines)
 
     @Property(bool, notify=gestureStateChanged)
     def recordMode(self):
@@ -2365,16 +2373,32 @@ class Backend(QObject):
 
     @Slot()
     def logLatencySummary(self):
-        """Write the input-latency summary into the debug log."""
+        """Write the input-latency summary into the mouse debug log."""
+        self.logLatencySummaryFor("mouse")
+
+    @Slot(str)
+    def logLatencySummaryFor(self, kind):
+        """Write the input-latency summary into the log of ``kind``."""
         lines = []
         if self._engine and hasattr(self._engine, "latency_summary"):
             lines = self._engine.latency_summary()
         for line in lines or ["Latency: not available"]:
-            self._append_debug_line(line)
+            self._append_debug_line(line, kind)
 
     @Slot()
     def clearDebugLog(self):
+        """Clear both the mouse and the keyboard debug logs."""
         self._debug_lines = []
+        self._keyboard_debug_lines = []
+        self.debugLogChanged.emit()
+
+    @Slot(str)
+    def clearDebugLogFor(self, kind):
+        """Clear only the debug log of ``kind`` ("mouse" or "keyboard")."""
+        if kind == "keyboard":
+            self._keyboard_debug_lines = []
+        else:
+            self._debug_lines = []
         self.debugLogChanged.emit()
 
     @Slot(bool)
@@ -3159,10 +3183,18 @@ class Backend(QObject):
         if message:
             self.statusMessage.emit(message)
 
-    def _append_debug_line(self, message):
+    def _append_debug_line(self, message, source=None):
+        """Add a line to the mouse or the keyboard debug log. Without an
+        explicit ``source`` the message decides (see core.debug_log)."""
+        source = source or debug_message_source(message)
         timestamp = time.strftime("%H:%M:%S")
-        self._debug_lines.append(f"[{timestamp}] {message}")
-        self._debug_lines = self._debug_lines[-200:]
+        line = f"[{timestamp}] {message}"
+        if source == "keyboard":
+            self._keyboard_debug_lines.append(line)
+            self._keyboard_debug_lines = self._keyboard_debug_lines[-200:]
+        else:
+            self._debug_lines.append(line)
+            self._debug_lines = self._debug_lines[-200:]
         self.debugLogChanged.emit()
 
     def _new_attempt(self):
